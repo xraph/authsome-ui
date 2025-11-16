@@ -1,0 +1,62 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # Use manifest-based configuration for monorepo
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          
+      # Optional: Publish to npm when releases are created
+      # Uncomment the following steps when ready to auto-publish
+      
+      # - uses: actions/checkout@v4
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #
+      # - uses: pnpm/action-setup@v2
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #   with:
+      #     version: 8
+      #
+      # - uses: actions/setup-node@v4
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #   with:
+      #     node-version: '18'
+      #     cache: 'pnpm'
+      #     registry-url: 'https://registry.npmjs.org'
+      #
+      # - name: Install Dependencies
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #   run: pnpm install --frozen-lockfile
+      #
+      # - name: Build
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #   run: pnpm run build --filter=./packages/*
+      #
+      # - name: Publish to npm
+      #   if: ${{ steps.release.outputs.releases_created }}
+      #   run: |
+      #     cd packages
+      #     for dir in */; do
+      #       if [ -f "$dir/package.json" ]; then
+      #         cd "$dir"
+      #         npm publish --access public
+      #         cd ..
+      #       fi
+      #     done
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+

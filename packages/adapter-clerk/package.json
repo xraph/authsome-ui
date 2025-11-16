@@ -1,0 +1,53 @@
+{
+  "name": "@authsome/adapter-clerk",
+  "version": "0.1.0",
+  "description": "Clerk adapter for AuthSome UI using Clerk SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@authsome/ui-core": "workspace:*",
+    "@clerk/clerk-js": "^5.33.0"
+  },
+  "peerDependencies": {
+    "@clerk/clerk-js": "^5.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "clerk",
+    "adapter",
+    "authsome-ui"
+  ],
+  "author": "XRAPH",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xraph/authsome-ui.git",
+    "directory": "packages/adapter-clerk"
+  }
+}
+
