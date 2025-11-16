@@ -12,6 +12,7 @@ Instead of installing pre-built components:
 # ❌ Old way (component library)
 pnpm add @authsome/ui-react-shadcn
 import { SignInForm } from '@authsome/ui-react-shadcn'
+
 ```
 
 We copy the code to your project:
