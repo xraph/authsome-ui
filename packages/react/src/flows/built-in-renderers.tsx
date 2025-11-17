@@ -117,7 +117,7 @@ export function createLoadingRenderer(uiComponents: UIComponents) {
   const { icons } = uiComponents;
   const LoadingIcon = icons?.loading;
 
-  return () => (
+  const LoadingRenderer = () => (
     <div className="flex flex-col items-center justify-center py-12">
       {LoadingIcon ? (
         <LoadingIcon className="h-12 w-12 text-blue-600 animate-spin" />
@@ -127,5 +127,8 @@ export function createLoadingRenderer(uiComponents: UIComponents) {
       <p className="text-gray-600 mt-4">Processing...</p>
     </div>
   );
+  LoadingRenderer.displayName = 'LoadingRenderer';
+  
+  return LoadingRenderer;
 }
 

@@ -6,7 +6,6 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks';
-import { useFlow } from '../FlowContext';
 import type { UIComponents } from '../ui-components';
 import type { RendererConfig, CustomField } from '../renderer-config';
 import type { FlowState, OAuthProvider } from '@authsome/ui-core';
@@ -273,7 +272,7 @@ export function UnifiedAuthRenderer({
 
       if (field.type === 'select' && Select) {
         // Use composite Select (shadcn-style)
-        const { Root, Trigger, Value, Content, Item, Group, Label: SelectLabel } = Select;
+        const { Root, Trigger, Value, Content, Item } = Select;
         
         return (
           <div key={field.name} className="space-y-2">

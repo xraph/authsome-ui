@@ -8,28 +8,8 @@ import type {
   AuthProvider,
   User,
   Session,
-  SignInRequest,
-  SignUpRequest,
   AuthResponse,
   OAuthProvider,
-  OAuthSignInRequest,
-  OAuthCallbackRequest,
-  TwoFactorMethod,
-  TwoFactorSetupRequest,
-  TwoFactorVerifyRequest,
-  TwoFactorSetupResponse,
-  MagicLinkRequest,
-  MagicLinkVerifyRequest,
-  PhoneAuthRequest,
-  PhoneVerifyRequest,
-  PasskeyRegisterRequest,
-  PasskeyAuthRequest,
-  PasskeyCredential,
-  PasswordChangeRequest,
-  PasswordResetRequest,
-  PasswordResetConfirmRequest,
-  UpdateUserRequest,
-  ProviderConfig,
 } from '@authsome/ui-core';
 import { AuthError } from '@authsome/ui-core';
 
@@ -237,7 +217,7 @@ export class SupabaseAdapter implements AuthProvider {
     }
   }
 
-  async handleOAuthCallback(params: OAuthCallbackParams): Promise<AuthResponse> {
+  async handleOAuthCallback(_params: OAuthCallbackParams): Promise<AuthResponse> {
     try {
       // Supabase handles OAuth callback automatically via session detection
       const { data, error } = await this.client.auth.getSession();
@@ -313,7 +293,7 @@ export class SupabaseAdapter implements AuthProvider {
     }
   }
 
-  async verify2FA(code: string, method?: TwoFactorMethod): Promise<AuthResponse> {
+  async verify2FA(code: string, _method?: string): Promise<AuthResponse> {
     try {
       // Get the enrolled factor
       const { data: { factors } } = await this.client.auth.mfa.listFactors();
@@ -343,7 +323,7 @@ export class SupabaseAdapter implements AuthProvider {
     }
   }
 
-  async disable2FA(code: string): Promise<void> {
+  async disable2FA(_code: string): Promise<void> {
     try {
       const { data: { factors } } = await this.client.auth.mfa.listFactors();
       const factor = factors?.[0];

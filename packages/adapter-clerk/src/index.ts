@@ -8,30 +8,10 @@ import type {
   AuthProvider,
   User,
   Session,
-  SignInRequest,
-  SignUpRequest,
   AuthResponse,
   OAuthProvider,
-  OAuthSignInRequest,
-  OAuthCallbackRequest,
-  TwoFactorMethod,
-  TwoFactorSetupRequest,
-  TwoFactorVerifyRequest,
-  TwoFactorSetupResponse,
-  MagicLinkRequest,
-  MagicLinkVerifyRequest,
-  PhoneAuthRequest,
-  PhoneVerifyRequest,
-  PasskeyRegisterRequest,
-  PasskeyAuthRequest,
-  PasskeyCredential,
-  PasswordChangeRequest,
-  PasswordResetRequest,
-  PasswordResetConfirmRequest,
-  UpdateUserRequest,
-  ProviderConfig,
-  AuthError,
 } from '@authsome/ui-core';
+import { AuthError } from '@authsome/ui-core';
 
 export interface ClerkAdapterConfig {
   publishableKey: string;
@@ -256,7 +236,7 @@ export class ClerkAdapter implements AuthProvider {
     }
   }
 
-  async handleOAuthCallback(params: OAuthCallbackParams): Promise<AuthResponse> {
+  async handleOAuthCallback(_params: OAuthCallbackParams): Promise<AuthResponse> {
     const clerk = this.ensureInitialized();
 
     try {
@@ -291,7 +271,7 @@ export class ClerkAdapter implements AuthProvider {
     }
   }
 
-  async verifyMagicLink(token: string): Promise<AuthResponse> {
+  async verifyMagicLink(_token: string): Promise<AuthResponse> {
     const clerk = this.ensureInitialized();
 
     try {

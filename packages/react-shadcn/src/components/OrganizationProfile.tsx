@@ -203,7 +203,7 @@ export function OrganizationProfile({
               <h2 className="text-lg font-semibold mb-4">Organization Members</h2>
               <p className="text-muted-foreground text-sm">
                 Member management is currently not available through the UI. 
-                Please use your authentication provider's dashboard to manage members.
+                Please use your authentication provider&apos;s dashboard to manage members.
               </p>
             </div>
           </div>
@@ -214,7 +214,7 @@ export function OrganizationProfile({
             <div className="rounded-lg border p-6">
               <h2 className="text-lg font-semibold mb-4">Organization Settings</h2>
               <p className="text-muted-foreground text-sm">
-                Advanced settings are managed through your authentication provider's dashboard.
+                Advanced settings are managed through your authentication provider&apos;s dashboard.
               </p>
             </div>
             

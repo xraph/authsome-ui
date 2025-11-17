@@ -58,8 +58,6 @@
       "bump-patch-for-minor-pre-major": true
     }
   },
-  "bootstrap-sha": "main",
-  "group-pull-request-title-pattern": "chore: release ${version}",
   "changelog-sections": [
     {
       "type": "feat",

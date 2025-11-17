@@ -25,8 +25,6 @@ import type {
   TwoFactorVerifyRequest,
   PasskeyRegisterRequest,
   PasskeyAuthRequest,
-  OAuthProvider,
-  TwoFactorMethod,
   PasskeyCredential,
 } from '@authsome/ui-core';
 import { AuthErrorType, BaseAuthProvider, TokenManager, createAuthError } from '@authsome/ui-core';

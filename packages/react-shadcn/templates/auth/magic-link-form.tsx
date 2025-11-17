@@ -53,7 +53,7 @@ export function MagicLinkForm({
             Check Your Email
           </CardTitle>
           <CardDescription>
-            We've sent a magic link to <strong>{email}</strong>
+            We&apos;ve sent a magic link to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,7 +79,7 @@ export function MagicLinkForm({
       <CardHeader>
         <CardTitle>Sign In with Magic Link</CardTitle>
         <CardDescription>
-          We'll send you a secure link to sign in without a password
+          We&apos;ll send you a secure link to sign in without a password
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>

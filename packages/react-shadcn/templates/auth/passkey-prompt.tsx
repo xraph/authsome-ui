@@ -73,7 +73,7 @@ export function PasskeyPrompt({
             <p className="text-sm text-muted-foreground max-w-sm">
               {mode === 'register'
                 ? 'Passkeys use biometrics or your device PIN for enhanced security. You can use it to sign in quickly on this device.'
-                : 'Authenticate using your device's built-in security. No password needed.'}
+                : 'Authenticate using your device&apos;s built-in security. No password needed.'}
             </p>
           </div>
         </div>

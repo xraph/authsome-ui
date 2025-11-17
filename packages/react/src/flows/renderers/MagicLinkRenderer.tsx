@@ -124,7 +124,7 @@ export function MagicLinkSentRenderer({
       )}
 
       <p className="text-sm text-gray-600">
-        Didn't receive the email? Check your spam folder or try again.
+        Didn&apos;t receive the email? Check your spam folder or try again.
       </p>
     </div>
   );

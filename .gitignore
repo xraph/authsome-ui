@@ -42,3 +42,4 @@ temp
 tmp
 dist/
 
+*.md

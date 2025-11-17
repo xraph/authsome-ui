@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+.next/
+out/
+
+# Cache
+.turbo/
+.cache/
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+

@@ -16,7 +16,7 @@ export interface PasskeyRendererProps {
 }
 
 export function PasskeyRenderer({
-  state,
+  state: _state,
   onNext,
   onBack,
   isLoading,
@@ -52,7 +52,7 @@ export function PasskeyRenderer({
         {KeyIcon && <KeyIcon className="mx-auto h-16 w-16 text-blue-600" />}
         <h2 className="mt-4 text-2xl font-bold tracking-tight">Use Your Passkey</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Authenticate using your device's biometric sensors or security key
+          Authenticate using your device&apos;s biometric sensors or security key
         </p>
       </div>
 

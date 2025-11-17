@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "lint": "eslint .",
+    "lint": "eslint . --ignore-path ../../.eslintignore",
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "test:watch": "vitest --watch"

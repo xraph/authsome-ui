@@ -71,7 +71,7 @@ export function MFASelectMethodRenderer({
       <div className="text-center">
         <h2 className="text-2xl font-bold tracking-tight">Choose Verification Method</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Select how you'd like to verify your identity
+          Select how you&apos;d like to verify your identity
         </p>
       </div>
 
