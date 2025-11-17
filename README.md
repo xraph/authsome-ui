@@ -2,7 +2,7 @@
 
 <div align="center">
   <h3>🔐 Production-Ready Authentication UI Toolkit</h3>
-  <p>Framework-agnostic auth with headless components, React hooks, and beautiful pre-styled UI</p>
+  <p>Framework-agnostic auth with headless components, React hooks, and beautiful pre-styled UI </p>
   
   [![npm version](https://img.shields.io/npm/v/@authsome/ui-core)](https://www.npmjs.com/package/@authsome/ui-core)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
