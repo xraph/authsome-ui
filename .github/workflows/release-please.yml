@@ -20,6 +20,9 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
       
+      # The steps below run ONLY when a release PR is merged
+      # releases_created is true AFTER merge, not when PR is created
+      
       - uses: actions/checkout@v4
         if: ${{ steps.release.outputs.releases_created }}
       
@@ -45,15 +48,7 @@ jobs:
       
       - name: Publish to npm
         if: ${{ steps.release.outputs.releases_created }}
-        run: |
-          cd packages
-          for dir in */; do
-            if [ -f "$dir/package.json" ]; then
-              cd "$dir"
-              npm publish --access public
-              cd ..
-            fi
-          done
+        run: pnpm -r publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
