@@ -1,6 +1,6 @@
 {
   "name": "@authsome/ui-react-shadcn",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "shadcn/ui auth components CLI - add auth components to your project",
   "type": "module",
   "bin": {
