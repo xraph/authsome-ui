@@ -42,4 +42,7 @@ temp
 tmp
 dist/
 
+!CHANGELOG.md
+!README.md
+!CONTRIBUTING.md
 *.md
