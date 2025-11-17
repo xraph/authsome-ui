@@ -2,7 +2,7 @@
   "packages/core": "0.1.0",
   "packages/react": "0.1.0",
   "packages/react-headless": "0.1.0",
-  "packages/react-shadcn": "0.1.0",
+  "packages/react-shadcn": "0.1.1",
   "packages/adapter-authsome": "0.1.0",
   "packages/adapter-clerk": "0.1.0",
   "packages/adapter-generic": "0.1.0",
