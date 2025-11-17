@@ -7,7 +7,7 @@
 // Export context and provider
 export * from './context/AuthProvider';
 
-// Export hooks
+// Export hooks export
 export * from './hooks';
 
 // Export components
