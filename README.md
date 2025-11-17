@@ -369,7 +369,7 @@ MIT © 2025 XRAPH
 ## 📞 Support
 
 - [GitHub Issues](https://github.com/xraph/authsome-ui/issues)
-- [Documentation](https://authsome.xraph.com/ui)
+- [Documentation](https://authsome.xraph.com/docs/ui)
 - [Discord Community](#)
 
 ---
