@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.2...adapter-authsome-v0.1.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* remove trailing newline in README.md ([7006c2b](https://github.com/xraph/authsome-ui/commit/7006c2b48fd89f381be9c1b21ff1276d01c255c8))
+
 ## [0.1.2](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.1...adapter-authsome-v0.1.2) (2025-11-18)
 
 
