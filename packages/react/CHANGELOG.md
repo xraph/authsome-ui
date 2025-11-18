@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.2](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.1...ui-react-v0.1.2) (2025-11-18)
+
+
+### Bug Fixes
+
+* update release-please configuration and enhance npm publish workflow ([64faa61](https://github.com/xraph/authsome-ui/commit/64faa6138bb3217500f2d62c62be5b998c42aeec))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authsome/ui-core bumped to 0.1.1
+
 ## [0.1.1](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.0...ui-react-v0.1.1) (2025-11-17)
 
 
