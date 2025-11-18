@@ -78,11 +78,21 @@ export function createOAuthCallbackHandler(config: NextAuthConfig) {
 
 /**
  * Server-side auth page props helper
- * Handles redirect logic for authenticated users
+ * Handles redirect logic for authenticated users and session management
+ * 
+ * Note: Config is still required for server-side session operations,
+ * but is not returned in the props since AuthFlowClient gets it from context.
  * 
  * @example
  * ```tsx
- * import { getAuthPageProps } from '@authsome/ui-next';
+ * import { getAuthPageProps } from '@authsome/ui-next/server';
+ * import { redirect } from 'next/navigation';
+ * 
+ * // Config for server-side operations (session management)
+ * const config = {
+ *   adapter: authsomeAdapter({ apiKey: process.env.AUTHSOME_API_KEY! }),
+ *   session: { password: process.env.SESSION_SECRET! },
+ * };
  * 
  * export default async function AuthPage({ params, searchParams }) {
  *   const props = await getAuthPageProps({ params, searchParams, config });
@@ -121,7 +131,6 @@ export async function getAuthPageProps(options: {
     return {
       route,
       initialSession: null,
-      config,
       searchParams: resolvedSearchParams as Record<string, string | string[]>,
       redirect: redirectUrl,
     };
@@ -138,7 +147,6 @@ export async function getAuthPageProps(options: {
     return {
       route,
       initialSession: session,
-      config,
       searchParams: resolvedSearchParams as Record<string, string | string[]>,
       redirect: redirectUrl,
     };
@@ -147,7 +155,6 @@ export async function getAuthPageProps(options: {
   return {
     route,
     initialSession: session,
-    config,
     searchParams: resolvedSearchParams as Record<string, string | string[]>,
     redirect: null,
   };

@@ -244,12 +244,29 @@ export interface ActionResult<T = unknown> {
 
 /**
  * Auth flow client props
+ * 
+ * Note: config is now provided via NextAuthProvider context,
+ * not as a prop to AuthFlowClient.
  */
 export interface AuthFlowClientProps {
   route: ParsedAuthRoute;
   initialSession: Session | null;
-  config: NextAuthConfig;
   searchParams?: Record<string, string | string[]>;
+}
+
+/**
+ * Next.js Auth Provider props
+ */
+export interface NextAuthProviderProps {
+  /**
+   * Next.js auth configuration
+   */
+  config: NextAuthConfig;
+
+  /**
+   * Child components
+   */
+  children: React.ReactNode;
 }
 
 /**

@@ -4,6 +4,7 @@
  */
 
 // Components
+export { NextAuthProvider } from './components/NextAuthProvider';
 export { AuthFlowClient } from './components/AuthFlowClient';
 export { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -27,6 +28,7 @@ export {
 // Types
 export type {
   NextAuthConfig,
+  NextAuthProviderProps,
   MiddlewareConfig,
   SessionConfig,
   PageConfig,
