@@ -7,7 +7,9 @@ export default defineConfig({
     'server/index': 'src/server/index.ts',
   },
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: {
+    resolve: true,
+  },
   sourcemap: true,
   clean: true,
   external: [
@@ -24,5 +26,6 @@ export default defineConfig({
   splitting: false,
   minify: false,
   target: 'es2020',
+  tsconfig: './tsconfig.json',
 });
 

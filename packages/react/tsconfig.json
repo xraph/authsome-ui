@@ -2,10 +2,13 @@
   "extends": "../../tsconfig.react.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "incremental": false,
-    "rootDir": "./src"
+    "paths": {
+      "@authsome/ui-core": ["../core/dist/index.d.ts"]
+    }
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 }
 

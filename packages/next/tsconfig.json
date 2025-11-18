@@ -18,7 +18,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "incremental": false
+    "incremental": false,
+    "paths": {
+      "@authsome/ui-core": ["../core/dist/index.d.ts"],
+      "@authsome/ui-react": ["../react/dist/index.d.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]

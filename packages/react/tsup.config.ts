@@ -3,12 +3,15 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['cjs', 'esm'],
-  dts: true,
+  dts: {
+    resolve: true,
+  },
   splitting: false,
   sourcemap: true,
   clean: true,
   treeshake: true,
   minify: false,
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom', '@authsome/ui-core'],
+  tsconfig: './tsconfig.json',
 });
 
