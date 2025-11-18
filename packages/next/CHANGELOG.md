@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.2...ui-next-v0.1.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* update demo lint script to use eslint directly ([206ea2b](https://github.com/xraph/authsome-ui/commit/206ea2bbdf0cdde7c385c77015cfd2046ebef25e))
+
 ## [0.1.2](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.1...ui-next-v0.1.2) (2025-11-18)
 
 
