@@ -14,31 +14,16 @@ import type {
   LinkProps,
   CheckboxProps,
   LabelProps,
-  SelectProps,
   SelectComponents,
-  TextareaProps
+  TextareaProps,
+  FieldComponents
 } from './ui-components';
 
-export const DefaultInput: React.FC<InputProps> = ({ label, error, helperText, className, ...props }) => (
-  <div className={`space-y-1 ${className || ''}`}>
-    {label && (
-      <label className="block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-    )}
+export const DefaultInput: React.FC<InputProps> = ({ className, ...props }) => (
     <input
-      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-        error ? 'border-red-500' : 'border-gray-300'
-      }`}
+    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${className || ''}`}
       {...props}
     />
-    {error && (
-      <p className="text-sm text-red-600">{error}</p>
-    )}
-    {helperText && !error && (
-      <p className="text-sm text-gray-500">{helperText}</p>
-    )}
-  </div>
 );
 
 export const DefaultButton: React.FC<ButtonProps> = ({
@@ -215,20 +200,69 @@ export const DefaultSelect: SelectComponents = {
 };
 
 export const DefaultTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, helperText, className, ...props }, ref) => (
-    <div className={className}>
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+  ({ className, ...props }, ref) => (
       <textarea 
         ref={ref} 
         {...props} 
-        className={`w-full px-3 py-2 border rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          error ? 'border-red-500' : 'border-gray-300'
-        }`}
+      className={`w-full px-3 py-2 border border-gray-300 rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500 ${className || ''}`}
       />
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-      {helperText && !error && <p className="text-sm text-gray-500 mt-1">{helperText}</p>}
-    </div>
   )
 );
 DefaultTextarea.displayName = 'DefaultTextarea';
+
+// Default Field Components
+const FieldElement: React.FC<any> = ({ children, className, orientation, ...props }) => (
+  <div 
+    className={`${orientation === 'horizontal' ? 'flex items-center gap-2' : 'space-y-2'} ${className || ''}`}
+    {...props}
+  >
+    {children}
+  </div>
+);
+
+const FieldLabelElement: React.FC<any> = ({ children, className, ...props }) => (
+  <label className={`block text-sm font-medium text-gray-700 ${className || ''}`} {...props}>
+    {children}
+  </label>
+);
+
+const FieldDescriptionElement: React.FC<any> = ({ children, className }) => (
+  <p className={`text-sm text-gray-500 ${className || ''}`}>
+    {children}
+  </p>
+);
+
+const FieldErrorElement: React.FC<any> = ({ children, className }) => (
+  <p className={`text-sm text-red-600 ${className || ''}`}>
+    {children}
+  </p>
+);
+
+const FieldSetElement: React.FC<any> = ({ children, className }) => (
+  <fieldset className={className}>
+    {children}
+  </fieldset>
+);
+
+const FieldLegendElement: React.FC<any> = ({ children, className }) => (
+  <legend className={`text-base font-semibold text-gray-900 ${className || ''}`}>
+    {children}
+  </legend>
+);
+
+const FieldGroupElement: React.FC<any> = ({ children, className }) => (
+  <div className={`space-y-4 ${className || ''}`}>
+    {children}
+  </div>
+);
+
+export const DefaultField: FieldComponents = {
+  Field: FieldElement,
+  FieldLabel: FieldLabelElement,
+  FieldDescription: FieldDescriptionElement,
+  FieldError: FieldErrorElement,
+  FieldSet: FieldSetElement,
+  FieldLegend: FieldLegendElement,
+  FieldGroup: FieldGroupElement,
+};
 

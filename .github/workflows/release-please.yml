@@ -56,6 +56,7 @@ jobs:
           cd ../../packages/react && pnpm publish --access public --no-git-checks || true
           cd ../react-headless && pnpm publish --access public --no-git-checks || true
           cd ../react-shadcn && pnpm publish --access public --no-git-checks || true
+          cd ../next && pnpm publish --access public --no-git-checks || true
           cd ../adapter-authsome && pnpm publish --access public --no-git-checks || true
           cd ../adapter-clerk && pnpm publish --access public --no-git-checks || true  
           cd ../adapter-generic && pnpm publish --access public --no-git-checks || true

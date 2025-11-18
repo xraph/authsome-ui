@@ -2,10 +2,12 @@
  * Passkey/WebAuthn authentication renderer
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { FlowState } from '@authsome/ui-core';
+import { defaultLocale } from '@authsome/ui-core';
 
 export interface PasskeyRendererProps {
   state: FlowState;
@@ -13,6 +15,7 @@ export interface PasskeyRendererProps {
   onBack?: () => Promise<void>;
   isLoading: boolean;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
 }
 
 export function PasskeyRenderer({
@@ -21,26 +24,31 @@ export function PasskeyRenderer({
   onBack,
   isLoading,
   uiComponents,
+  rendererConfig,
 }: PasskeyRendererProps) {
-  const { authenticateWithPasskey } = useAuth();
+  const { authenticatePasskey } = useAuth();
   const { Button, Alert, icons } = uiComponents;
-  const KeyIcon = icons?.key;
+  const PasskeyIcon = icons?.passkey || icons?.key;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleAuthenticate = async () => {
+    if (!authenticatePasskey) {
+      setError(locale.errors?.generic || 'Passkey authentication is not available');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      const result = await authenticateWithPasskey({});
-      await onNext({
-        user: result.user,
-        session: result.session,
-      });
+      await authenticatePasskey({});
+      // Auth state is updated internally, just move to next step
+      await onNext();
     } catch (err: any) {
-      setError(err.message || 'Passkey authentication failed');
+      setError(err.message || locale.errors?.generic || 'Passkey authentication failed');
     } finally {
       setLoading(false);
     }
@@ -49,8 +57,12 @@ export function PasskeyRenderer({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        {KeyIcon && <KeyIcon className="mx-auto h-16 w-16 text-blue-600" />}
-        <h2 className="mt-4 text-2xl font-bold tracking-tight">Use Your Passkey</h2>
+        {PasskeyIcon ? (
+          <PasskeyIcon className="mx-auto h-16 w-16 text-blue-600" />
+        ) : (
+          <span className="text-6xl">🔑</span>
+        )}
+        <h2 className="mt-4 text-2xl font-bold tracking-tight">{locale.passkey?.usePasskey || 'Use Your Passkey'}</h2>
         <p className="text-sm text-gray-600 mt-1">
           Authenticate using your device&apos;s biometric sensors or security key
         </p>
@@ -66,7 +78,7 @@ export function PasskeyRenderer({
           loading={loading || isLoading}
           className="w-full"
         >
-          Authenticate with Passkey
+          {locale.passkey?.signInWith || 'Authenticate with Passkey'}
         </Button>
 
         {onBack && (
@@ -76,7 +88,7 @@ export function PasskeyRenderer({
             disabled={loading || isLoading}
             className="w-full"
           >
-            Use Different Method
+            {locale.common?.back || 'Use Different Method'}
           </Button>
         )}
       </div>

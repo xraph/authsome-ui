@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { AuthProvider, AuthFlow, type UIComponents, type InputProps, type ButtonProps, type RendererConfig, useAuth } from '@authsome/ui-react';
+import { AuthProvider, AuthFlow, type UIComponents, type RendererConfig, useAuth } from '@authsome/ui-react';
 import { AuthClient, getFlowConfig, FlowConfigType } from '@authsome/ui-core';
 import React, { useState, useEffect } from 'react';
 import { Alert } from '@/components/ui/alert';
@@ -18,34 +18,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { GithubIcon } from 'lucide-react';
+import {
+  Field,
+  FieldLabel,
+  FieldDescription,
+  FieldError,
+} from '@/components/ui/field';
 import { createAuthClient, ProviderType } from '@/lib/auth-client';
 import { Shield } from 'lucide-react';
-
-
-// Create Input component
-const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(({ label, error, helperText, className, ...props }, ref) => (
-  <div className="space-y-2">
-    {label && <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{label}</label>}
-    <Input
-      ref={ref}
-      className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-destructive' : ''} ${className || ''}`}
-      {...props}
-    />
-    {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-    {helperText && !error && <p className="text-sm text-muted-foreground">{helperText}</p>}
-  </div>
-));
-InputComponent.displayName = 'Input';
+import { SiGoogle, SiGithub } from 'react-icons/si';
+import { FaMicrosoft } from 'react-icons/fa';
 
 
 // Map shadcn components to AuthSome UI interface
 const uiComponents: UIComponents = {
-  // Input component with label, error, and helper text support
+  // Input component
   Input: Input,
   
   // Button component
   Button: Button,
+
+  // Field components
+  Field: {
+    Field,
+    FieldLabel,
+    FieldDescription,
+    FieldError,
+  },
 
   // Checkbox component (for "Remember me" and terms)
   Checkbox: Checkbox,
@@ -67,7 +66,7 @@ const uiComponents: UIComponents = {
   Divider: ({ label }) => (
     <div className="relative flex items-center gap-2">
       <Separator className="flex-1" />
-      {label && <span className="text-xs uppercase">{label}</span>}
+      {label && <span className="text-xs">{label}</span>}
       <Separator className="flex-1" />
     </div>
   ),
@@ -84,17 +83,25 @@ const uiComponents: UIComponents = {
   ),
 
   // OAuth provider icons
-  icons: {
-    Google:  GithubIcon,
-    GitHub: GithubIcon,
-    Microsoft: GithubIcon,
+  providerIcons: {
+    google: SiGoogle,
+    github: SiGithub,
+    microsoft: FaMicrosoft,
   },
 };
+
+// Debug: Log to verify icons are imported
+console.log('Demo page - Provider icons:', {
+  google: SiGoogle,
+  github: SiGithub,
+  microsoft: FaMicrosoft,
+  googleType: typeof SiGoogle,
+});
 
 // Wrapper component that provides auth client and passes through flow config
 function FlowDemoWrapper({ children }: { children: React.ReactNode }) {
   const [authClient, setAuthClient] = useState<AuthClient | null>(null);
-  const [demoMode, setDemoMode] = useState<'basic' | 'advanced'>('basic');
+  const [demoMode, setDemoMode] = useState<'basic' | 'advanced' | 'horizontal'>('basic');
 
   useEffect(() => {
     createAuthClient('authsome').then(setAuthClient);
@@ -127,10 +134,10 @@ function FlowDemoWrapper({ children }: { children: React.ReactNode }) {
       emailPassword: true,
       oauth: {
         providers: ['google', 'github', 'microsoft'],
+        layout: demoMode === 'horizontal' ? 'horizontal' : 'default', // Support both layouts
       },
       magicLink: true,
       passkey: true,
-      phone: true,
       username: true,
     },
     signIn: {
@@ -164,20 +171,26 @@ function FlowDemoWrapper({ children }: { children: React.ReactNode }) {
       termsUrl: '/terms',
     },
     socialFirst: false,
+    labels: {
+      signIn: 'Sign In',
+      signUp: 'Sign Up',
+      or: 'Or continue with',
+      continueWith: ' ',
+    },
   };
 
   const currentFlowConfig = getFlowConfig(
     demoMode === 'basic' ? FlowConfigType.SIMPLE_SIGN_IN : FlowConfigType.COMPLETE_SIGN_UP_FLOW
   );
   
-  const currentRendererConfig = demoMode === 'basic' ? basicConfig : advancedConfig;
+  const finalRendererConfig = demoMode === 'basic' ? basicConfig : advancedConfig;
 
   return (
     <AuthProvider
       client={authClient}
       flows={currentFlowConfig}
       uiComponents={uiComponents}
-      rendererConfig={currentRendererConfig}
+      rendererConfig={finalRendererConfig}
     >
       {typeof children === 'function' ? children({ demoMode, setDemoMode }) : children}
     </AuthProvider>
@@ -188,7 +201,7 @@ function FlowDemoWrapper({ children }: { children: React.ReactNode }) {
 export default function BuiltInRenderersPage() {
   return (
     <FlowDemoWrapper>
-      {({ demoMode, setDemoMode }: { demoMode: 'basic' | 'advanced'; setDemoMode: (mode: 'basic' | 'advanced') => void }) => (
+      {({ demoMode, setDemoMode }: { demoMode: 'basic' | 'advanced' | 'horizontal'; setDemoMode: (mode: 'basic' | 'advanced' | 'horizontal') => void }) => (
         <BuiltInRenderersContentNew demoMode={demoMode} setDemoMode={setDemoMode} />
       )}
     </FlowDemoWrapper>
@@ -200,8 +213,8 @@ function BuiltInRenderersContentNew({
   demoMode, 
   setDemoMode 
 }: { 
-  demoMode: 'basic' | 'advanced'; 
-  setDemoMode: (mode: 'basic' | 'advanced') => void 
+  demoMode: 'basic' | 'advanced' | 'horizontal'; 
+  setDemoMode: (mode: 'basic' | 'advanced' | 'horizontal') => void 
 }) {
   const { client } = useAuth();
 
@@ -259,7 +272,13 @@ function BuiltInRenderersContentNew({
                 onClick={() => setDemoMode('advanced')}
                 variant={demoMode === 'advanced' ? 'default' : 'outline'}
               >
-                Advanced (OAuth + Custom Fields)
+                Advanced (Vertical)
+              </Button>
+              <Button
+                onClick={() => setDemoMode('horizontal')}
+                variant={demoMode === 'horizontal' ? 'default' : 'outline'}
+              >
+                Horizontal Icons
               </Button>
             </div>
 

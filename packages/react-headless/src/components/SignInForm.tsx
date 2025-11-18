@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 import { useSignIn } from '@authsome/ui-react';
-import type { SignInRequest, ValidationError } from '@authsome/ui-core';
-import { validateEmail, validatePassword } from '@authsome/ui-core';
+import type { SignInRequest } from '@authsome/ui-core';
+import { validateEmail } from '@authsome/ui-core';
 
 export interface SignInFormProps {
   onSuccess?: () => void;

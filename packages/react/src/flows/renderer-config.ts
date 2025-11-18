@@ -2,7 +2,7 @@
  * Configuration for built-in renderers
  */
 
-import type { OAuthProvider } from '@authsome/ui-core';
+import type { OAuthProvider, AuthLocale, DeepPartial } from '@authsome/ui-core';
 
 /**
  * Auth method configuration
@@ -27,6 +27,13 @@ export interface AuthMethodConfig {
      * Show as buttons or provider selector
      */
     display?: 'buttons' | 'selector';
+    /**
+     * Layout for OAuth buttons
+     * - 'default': Full width buttons with icons and text (vertical list)
+     * - 'horizontal': Icon-only buttons arranged horizontally
+     * @default 'default'
+     */
+    layout?: 'default' | 'horizontal';
   };
 
   /**
@@ -141,9 +148,15 @@ export interface CustomField {
  */
 export interface SignUpConfig {
   /**
-   * Additional fields to collect during signup
+   * Additional fields to collect during signup (client-side defined)
    */
   customFields?: CustomField[];
+
+  /**
+   * Whether to fetch and use dynamic fields from backend
+   * @default true
+   */
+  useDynamicFields?: boolean;
 
   /**
    * Require email verification after signup
@@ -193,6 +206,19 @@ export interface SignInConfig {
    * Forgot password URL
    */
   forgotPasswordUrl?: string;
+
+  /**
+   * Text for the continue button in dynamic flow
+   * @default "Continue"
+   */
+  continueButtonText?: string;
+
+  /**
+   * Enable dynamic flow (Microsoft/Google style) when multiple auth methods are available
+   * Shows email first, then method selection
+   * @default true when multiple email-based methods are enabled
+   */
+  enableDynamicFlow?: boolean;
 }
 
 /**
@@ -222,6 +248,7 @@ export interface RendererConfig {
 
   /**
    * Custom labels and text
+   * @deprecated Use `locale` instead for full i18n support
    */
   labels?: {
     signIn?: string;
@@ -230,6 +257,25 @@ export interface RendererConfig {
     continueWith?: string;
     [key: string]: string | undefined;
   };
+
+  /**
+   * Locale configuration for internationalization
+   * Provides translations for all text in the auth UI
+   * 
+   * @example
+   * ```typescript
+   * locale: {
+   *   auth: {
+   *     signIn: 'Iniciar sesión',
+   *     signUp: 'Registrarse',
+   *   },
+   *   validation: {
+   *     emailRequired: 'El correo electrónico es obligatorio',
+   *   }
+   * }
+   * ```
+   */
+  locale?: DeepPartial<AuthLocale>;
 }
 
 /**
@@ -251,6 +297,7 @@ export const defaultRendererConfig: RendererConfig = {
   signUp: {
     requireEmailVerification: false,
     showTermsCheckbox: false,
+    useDynamicFields: true,
   },
   socialFirst: true,
   labels: {
@@ -285,6 +332,7 @@ export function mergeRendererConfig(userConfig?: RendererConfig): RendererConfig
       ...defaultRendererConfig.labels,
       ...userConfig.labels,
     },
+    locale: userConfig.locale,
   };
 }
 

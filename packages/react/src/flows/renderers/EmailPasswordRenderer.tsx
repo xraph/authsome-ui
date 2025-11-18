@@ -2,10 +2,10 @@
  * Email/Password authentication renderer
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
-import type { FlowState } from '@authsome/ui-core';
+import type { FlowState, FieldDefinition } from '@authsome/ui-core';
 
 export interface EmailPasswordRendererProps {
   state: FlowState;
@@ -19,19 +19,97 @@ export interface EmailPasswordRendererProps {
 export function EmailPasswordRenderer({
   state,
   onNext,
-  onBack,
+  onBack: _onBack,
   isLoading,
   uiComponents,
   mode = 'signin',
 }: EmailPasswordRendererProps) {
-  const { signIn, signUp } = useAuth();
-  const { Input, Button, Alert, Link } = uiComponents;
+  const auth = useAuth();
+  const { signIn, signUp, adapter } = auth;
+  const { Input, Button, Alert, Field, Select, Checkbox, Textarea } = uiComponents;
 
   const [email, setEmail] = useState(state.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dynamicFields, setDynamicFields] = useState<FieldDefinition[]>([]);
+  const [dynamicValues, setDynamicValues] = useState<Record<string, any>>({});
+
+  // Fetch dynamic fields on mount for signup
+  useEffect(() => {
+    const fetchFields = async () => {
+      if (mode === 'signup' && adapter?.getSignupFields) {
+        try {
+          const fields = await adapter.getSignupFields();
+          setDynamicFields(fields);
+          
+          // Initialize dynamic values with default values
+          const initialValues: Record<string, any> = {};
+          fields.forEach(field => {
+            if (field.defaultValue !== undefined) {
+              initialValues[field.name] = field.defaultValue;
+            }
+          });
+          setDynamicValues(initialValues);
+        } catch (err) {
+          console.error('Failed to fetch signup fields:', err);
+        }
+      }
+    };
+    fetchFields();
+  }, [mode, adapter]);
+
+  // Validate dynamic fields
+  const validateDynamicFields = (): string | null => {
+    for (const field of dynamicFields) {
+      const value = dynamicValues[field.name];
+      const validation = field.validation;
+
+      if (!validation) continue;
+
+      // Required validation
+      if (validation.required && (value === undefined || value === '' || value === null)) {
+        return validation.errorMessage || `${field.label} is required`;
+      }
+
+      // Skip other validations if value is empty and not required
+      if (value === undefined || value === '' || value === null) continue;
+
+      // String length validations
+      if (typeof value === 'string') {
+        if (validation.minLength && value.length < validation.minLength) {
+          return validation.errorMessage || `${field.label} must be at least ${validation.minLength} characters`;
+        }
+        if (validation.maxLength && value.length > validation.maxLength) {
+          return validation.errorMessage || `${field.label} must be at most ${validation.maxLength} characters`;
+        }
+      }
+
+      // Number validations
+      if (typeof value === 'number') {
+        if (validation.min !== undefined && value < validation.min) {
+          return validation.errorMessage || `${field.label} must be at least ${validation.min}`;
+        }
+        if (validation.max !== undefined && value > validation.max) {
+          return validation.errorMessage || `${field.label} must be at most ${validation.max}`;
+        }
+      }
+
+      // Pattern validation
+      if (validation.pattern && typeof value === 'string') {
+        try {
+          const regex = new RegExp(validation.pattern);
+          if (!regex.test(value)) {
+            return validation.errorMessage || `${field.label} format is invalid`;
+          }
+        } catch (e) {
+          console.error('Invalid regex pattern:', validation.pattern);
+        }
+      }
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,22 +121,152 @@ export function EmailPasswordRenderer({
       return;
     }
 
+    // Validate dynamic fields
+    if (mode === 'signup') {
+      const dynamicFieldError = validateDynamicFields();
+      if (dynamicFieldError) {
+        setError(dynamicFieldError);
+        return;
+      }
+    }
+
+    if (!signIn || !signUp) {
+      setError('Authentication is not available');
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = mode === 'signin'
-        ? await signIn({ email, password })
-        : await signUp({ email, password });
+      if (mode === 'signin') {
+        await signIn({ email, password });
+      } else {
+        await signUp({ 
+          email, 
+          password,
+          ...dynamicValues, // Include dynamic field values
+        });
+      }
 
-      await onNext({
-        user: result.user,
-        session: result.session,
-        email,
-        mfaRequired: result.mfaRequired,
-      });
+      // Auth state is updated internally, just move to next step
+      await onNext({ email });
     } catch (err: any) {
       setError(err.message || `${mode === 'signin' ? 'Sign in' : 'Sign up'} failed`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Render a dynamic field
+  const renderDynamicField = (field: FieldDefinition) => {
+    const value = dynamicValues[field.name];
+    const handleChange = (newValue: any) => {
+      setDynamicValues(prev => ({ ...prev, [field.name]: newValue }));
+    };
+
+    const fieldId = `dynamic-${field.name}`;
+
+    switch (field.type) {
+      case 'text':
+      case 'email':
+      case 'tel':
+      case 'url':
+      case 'password':
+      case 'number':
+      case 'date':
+        return (
+          <Field.Field key={field.name}>
+            <Field.FieldLabel htmlFor={fieldId}>
+              {field.label}
+              {field.validation?.required && ' *'}
+            </Field.FieldLabel>
+            <Input
+              id={fieldId}
+              type={field.type}
+              value={value || ''}
+              onChange={(e) => handleChange(field.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+              placeholder={field.placeholder}
+              required={field.validation?.required}
+              disabled={loading || isLoading}
+              minLength={field.validation?.minLength}
+              maxLength={field.validation?.maxLength}
+              min={field.validation?.min}
+              max={field.validation?.max}
+            />
+            {field.helperText && (
+              <Field.FieldDescription>{field.helperText}</Field.FieldDescription>
+            )}
+          </Field.Field>
+        );
+
+      case 'textarea':
+        if (!Textarea) return null;
+        return (
+          <Field.Field key={field.name}>
+            <Field.FieldLabel htmlFor={fieldId}>
+              {field.label}
+              {field.validation?.required && ' *'}
+            </Field.FieldLabel>
+            <Textarea
+              id={fieldId}
+              value={value || ''}
+              onChange={(e) => handleChange(e.target.value)}
+              placeholder={field.placeholder}
+              required={field.validation?.required}
+              disabled={loading || isLoading}
+            />
+            {field.helperText && (
+              <Field.FieldDescription>{field.helperText}</Field.FieldDescription>
+            )}
+          </Field.Field>
+        );
+
+      case 'select':
+        if (!Select || !field.options) return null;
+        return (
+          <Field.Field key={field.name}>
+            <Field.FieldLabel htmlFor={fieldId}>
+              {field.label}
+              {field.validation?.required && ' *'}
+            </Field.FieldLabel>
+            <Select.Root
+              value={value || ''}
+              onValueChange={handleChange}
+              disabled={loading || isLoading}
+            >
+              <Select.Trigger id={fieldId}>
+                <Select.Value placeholder={field.placeholder || 'Select...'} />
+              </Select.Trigger>
+                <Select.Content>
+                {field.options.map((option) => (
+                  <Select.Item key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+            {field.helperText && (
+              <Field.FieldDescription>{field.helperText}</Field.FieldDescription>
+            )}
+          </Field.Field>
+        );
+
+      case 'checkbox':
+        if (!Checkbox) return null;
+        return (
+          <Field.Field key={field.name}>
+            <Checkbox
+              id={fieldId}
+              checked={!!value}
+              onCheckedChange={handleChange}
+              disabled={loading || isLoading}
+              label={field.label}
+              description={field.helperText}
+            />
+          </Field.Field>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -80,66 +288,64 @@ export function EmailPasswordRenderer({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Field.Field>
+          <Field.FieldLabel htmlFor="email">Email</Field.FieldLabel>
         <Input
+            id="email"
           type="email"
-          label="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="john@example.com"
           required
           disabled={loading || isLoading}
+            aria-invalid={!!error}
         />
+        </Field.Field>
 
+        <Field.Field>
+          <Field.FieldLabel htmlFor="password">Password</Field.FieldLabel>
         <Input
+            id="password"
           type="password"
-          label="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           required
           disabled={loading || isLoading}
-          helperText={mode === 'signup' ? 'At least 8 characters' : undefined}
+            aria-invalid={!!error}
         />
+          {mode === 'signup' && (
+            <Field.FieldDescription>At least 8 characters</Field.FieldDescription>
+          )}
+        </Field.Field>
 
         {mode === 'signup' && (
+          <Field.Field>
+            <Field.FieldLabel htmlFor="confirmPassword">Confirm Password</Field.FieldLabel>
           <Input
+              id="confirmPassword"
             type="password"
-            label="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="••••••••"
             required
             disabled={loading || isLoading}
-          />
-        )}
-
-        <div className="flex gap-2">
-          {onBack && (
-            <Button
-              type="button"
-              onClick={onBack}
-              variant="outline"
-              disabled={loading || isLoading}
-            >
-              Back
-            </Button>
+              aria-invalid={!!error}
+            />
+          </Field.Field>
           )}
+
+          {/* Render dynamic fields for signup */}
+          {mode === 'signup' && dynamicFields.map(field => renderDynamicField(field))}
+
           <Button
             type="submit"
             loading={loading || isLoading}
-            className="flex-1"
+          className="w-full"
           >
             {mode === 'signin' ? 'Sign In' : 'Create Account'}
           </Button>
-        </div>
-
-        {mode === 'signin' && Link && (
-          <div className="text-center text-sm">
-            <Link href="/forgot-password">Forgot your password?</Link>
-          </div>
-        )}
       </form>
     </div>
   );
 }
-

@@ -34,6 +34,7 @@ export interface SignUpRequest {
   firstName?: string;
   lastName?: string;
   metadata?: Record<string, unknown>;
+  [key: string]: unknown; // Allow dynamic fields
 }
 
 /**
@@ -159,6 +160,40 @@ export interface UpdateUserRequest {
   lastName?: string;
   avatar?: string;
   metadata?: Record<string, unknown>;
+}
+
+/**
+ * Field validation rules for dynamic signup fields
+ */
+export interface FieldValidation {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  pattern?: string; // Regex pattern as string (will be sent from API)
+  errorMessage?: string;
+}
+
+/**
+ * Dynamic field definition for signup forms
+ */
+export interface FieldDefinition {
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'tel' | 'number' | 'select' | 'checkbox' | 'textarea' | 'date' | 'url' | 'password';
+  placeholder?: string;
+  helperText?: string;
+  defaultValue?: string | number | boolean;
+  options?: Array<{ value: string; label: string }>;
+  validation?: FieldValidation;
+}
+
+/**
+ * Response containing dynamic signup fields
+ */
+export interface SignupFieldsResponse {
+  fields: FieldDefinition[];
 }
 
 /**
@@ -357,5 +392,11 @@ export interface AuthProvider {
    * Optional - only available if adapter supports organizations
    */
   getOrganizationMemberships?(): Promise<import('./auth').OrganizationMembership[]>;
+
+  /**
+   * Get dynamic signup fields from the backend
+   * Optional - only available if adapter supports dynamic signup fields
+   */
+  getSignupFields?(): Promise<FieldDefinition[]>;
 }
 

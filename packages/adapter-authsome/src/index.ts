@@ -7,6 +7,7 @@
  * For now, it provides a basic HTTP-based implementation.
  */
 
+import { AuthError, AuthErrorType } from '@authsome/ui-core';
 import type {
   AuthProvider,
   User,
@@ -33,7 +34,8 @@ import type {
   PasswordResetConfirmRequest,
   UpdateUserRequest,
   ProviderConfig,
-  AuthError,
+  FieldDefinition,
+  SignupFieldsResponse,
 } from '@authsome/ui-core';
 
 export interface AuthSomeAdapterConfig extends ProviderConfig {
@@ -66,6 +68,7 @@ export class AuthSomeAdapter implements AuthProvider {
   private config: AuthSomeAdapterConfig | null = null;
   private accessToken: string | null = null;
   private initialized = false;
+  private signupFields: FieldDefinition[] | null = null;
 
   async initialize(config: ProviderConfig): Promise<void> {
     this.config = config as AuthSomeAdapterConfig;
@@ -75,6 +78,16 @@ export class AuthSomeAdapter implements AuthProvider {
     }
     
     this.initialized = true;
+
+    // Fetch signup fields configuration
+    try {
+      const response = await this.request<SignupFieldsResponse>('/auth/signup/fields');
+      this.signupFields = response.fields;
+    } catch (error) {
+      // Fields are optional, continue if endpoint doesn't exist
+      console.debug('Signup fields endpoint not available');
+      this.signupFields = [];
+    }
   }
 
   private ensureInitialized(): void {
@@ -350,20 +363,24 @@ export class AuthSomeAdapter implements AuthProvider {
     });
   }
 
+  // Dynamic signup fields
+  async getSignupFields(): Promise<FieldDefinition[]> {
+    this.ensureInitialized();
+    return this.signupFields || [];
+  }
+
   // Error handling
   normalizeError(error: unknown): AuthError {
-    if ((error as AuthError).type) {
-      return error as AuthError;
+    if (error instanceof AuthError) {
+      return error;
     }
     
     const message = (error as Error).message || 'Unknown error';
-    const type = (error as any).type || 'UNKNOWN_ERROR';
+    const type = (error as any).type || AuthErrorType.UNKNOWN_ERROR;
     
-    return {
-      message,
-      type,
+    return new AuthError(message, type, {
       originalError: error,
-    };
+    });
   }
 }
 

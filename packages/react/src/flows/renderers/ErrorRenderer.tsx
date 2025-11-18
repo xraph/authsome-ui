@@ -2,13 +2,15 @@
  * Error screen renderer
  */
 
-import React from 'react';
+import { AuthErrorType, defaultLocale } from '@authsome/ui-core';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { AuthError } from '@authsome/ui-core';
 
 export interface ErrorRendererProps {
   error: AuthError;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
   onRetry?: () => void;
   onBack?: () => void;
 }
@@ -16,33 +18,38 @@ export interface ErrorRendererProps {
 export function ErrorRenderer({
   error,
   uiComponents,
+  rendererConfig,
   onRetry,
   onBack,
 }: ErrorRendererProps) {
   const { Button, Alert, icons } = uiComponents;
   const ErrorIcon = icons?.error;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const getErrorTitle = (error: AuthError): string => {
+    const titles = locale.errors;
+    if (!titles) return error.message || 'Error';
+    
     switch (error.type) {
-      case 'INVALID_CREDENTIALS':
-        return 'Invalid Credentials';
-      case 'USER_NOT_FOUND':
-        return 'User Not Found';
-      case 'USER_ALREADY_EXISTS':
-        return 'Account Already Exists';
-      case 'INVALID_TOKEN':
-      case 'TOKEN_EXPIRED':
-        return 'Session Expired';
-      case 'NETWORK_ERROR':
-        return 'Connection Error';
-      case 'RATE_LIMIT_EXCEEDED':
-        return 'Too Many Attempts';
-      case 'MFA_REQUIRED':
-        return 'Verification Required';
-      case 'EMAIL_NOT_VERIFIED':
-        return 'Email Not Verified';
+      case AuthErrorType.INVALID_CREDENTIALS:
+        return titles.invalidCredentials || 'Invalid Credentials';
+      case AuthErrorType.USER_NOT_FOUND:
+        return titles.userNotFound || 'User Not Found';
+      case AuthErrorType.USER_ALREADY_EXISTS:
+        return titles.userExists || 'Account Already Exists';
+      case AuthErrorType.INVALID_TOKEN:
+      case AuthErrorType.TOKEN_EXPIRED:
+        return titles.tokenExpired || 'Session Expired';
+      case AuthErrorType.NETWORK_ERROR:
+        return titles.networkError || 'Connection Error';
+      case AuthErrorType.RATE_LIMIT_EXCEEDED:
+        return titles.rateLimitExceeded || 'Too Many Attempts';
+      case AuthErrorType.MFA_REQUIRED:
+        return titles.mfaRequired || 'Verification Required';
+      case AuthErrorType.EMAIL_NOT_VERIFIED:
+        return titles.emailNotVerified || 'Email Not Verified';
       default:
-        return 'Authentication Failed';
+        return titles.generic || 'Authentication Failed';
     }
   };
 
@@ -51,35 +58,38 @@ export function ErrorRenderer({
       return error.message;
     }
 
+    const messages = locale.errors;
+    if (!messages) return 'An error occurred';
+
     switch (error.type) {
-      case 'INVALID_CREDENTIALS':
-        return 'The email or password you entered is incorrect. Please try again.';
-      case 'USER_NOT_FOUND':
-        return 'No account found with this email address. Please sign up first.';
-      case 'USER_ALREADY_EXISTS':
-        return 'An account with this email already exists. Please sign in instead.';
-      case 'TOKEN_EXPIRED':
-        return 'Your session has expired. Please sign in again.';
-      case 'NETWORK_ERROR':
-        return 'Unable to connect. Please check your internet connection and try again.';
-      case 'RATE_LIMIT_EXCEEDED':
-        return 'Too many login attempts. Please wait a few minutes and try again.';
-      case 'EMAIL_NOT_VERIFIED':
-        return 'Please verify your email address before signing in.';
+      case AuthErrorType.INVALID_CREDENTIALS:
+        return messages.invalidCredentials || 'The email or password you entered is incorrect. Please try again.';
+      case AuthErrorType.USER_NOT_FOUND:
+        return messages.userNotFound || 'No account found with this email address. Please sign up first.';
+      case AuthErrorType.USER_ALREADY_EXISTS:
+        return messages.userExists || 'An account with this email already exists. Please sign in instead.';
+      case AuthErrorType.TOKEN_EXPIRED:
+        return messages.tokenExpired || 'Your session has expired. Please sign in again.';
+      case AuthErrorType.NETWORK_ERROR:
+        return messages.networkError || 'Unable to connect. Please check your internet connection and try again.';
+      case AuthErrorType.RATE_LIMIT_EXCEEDED:
+        return messages.rateLimitExceeded || 'Too many login attempts. Please wait a few minutes and try again.';
+      case AuthErrorType.EMAIL_NOT_VERIFIED:
+        return messages.emailNotVerified || 'Please verify your email address before signing in.';
       default:
-        return 'An unexpected error occurred. Please try again.';
+        return messages.generic || 'An unexpected error occurred. Please try again.';
     }
   };
 
   const getErrorHelp = (error: AuthError): string | null => {
     switch (error.type) {
-      case 'INVALID_CREDENTIALS':
+      case AuthErrorType.INVALID_CREDENTIALS:
         return 'Forgot your password? Use the password reset link.';
-      case 'USER_NOT_FOUND':
+      case AuthErrorType.USER_NOT_FOUND:
         return 'New here? Create an account to get started.';
-      case 'RATE_LIMIT_EXCEEDED':
+      case AuthErrorType.RATE_LIMIT_EXCEEDED:
         return 'For security reasons, we limit login attempts. Please try again in 15 minutes.';
-      case 'EMAIL_NOT_VERIFIED':
+      case AuthErrorType.EMAIL_NOT_VERIFIED:
         return 'Check your inbox for a verification email we sent you.';
       default:
         return null;
@@ -119,12 +129,12 @@ export function ErrorRenderer({
       <div className="space-y-2">
         {onRetry && (
           <Button onClick={onRetry} className="w-full">
-            Try Again
+            {locale.common?.continue || 'Try Again'}
           </Button>
         )}
         {onBack && (
           <Button onClick={onBack} variant="outline" className="w-full">
-            Go Back
+            {locale.common?.back || 'Go Back'}
           </Button>
         )}
       </div>

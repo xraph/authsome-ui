@@ -2,15 +2,17 @@
  * Success screen renderer
  */
 
-import React from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { User, Session } from '@authsome/ui-core';
+import { defaultLocale, interpolate } from '@authsome/ui-core';
 
 export interface SuccessRendererProps {
   user: User;
   session: Session;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
   onLogout?: () => void;
 }
 
@@ -18,13 +20,20 @@ export function SuccessRenderer({
   user,
   session,
   uiComponents,
+  rendererConfig,
   onLogout,
 }: SuccessRendererProps) {
   const { signOut } = useAuth();
   const { Button, Alert, icons } = uiComponents;
   const SuccessIcon = icons?.success;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const handleLogout = async () => {
+    if (!signOut) {
+      console.error('Sign out is not available');
+      return;
+    }
+    
     try {
       await signOut();
       if (onLogout) {
@@ -46,7 +55,9 @@ export function SuccessRenderer({
       )}
       
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Welcome Back!</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {user.name ? interpolate(locale.success?.welcome || 'Welcome, {name}!', { name: user.name }) : locale.success?.signedIn || 'Welcome Back!'}
+        </h2>
         <p className="text-gray-600 mt-2">
           {user.email && `You're signed in as ${user.email}`}
         </p>
@@ -54,7 +65,7 @@ export function SuccessRenderer({
 
       {Alert && (
         <Alert variant="success">
-          Authentication successful. Your session is now active.
+          {locale.success?.signedIn || 'Authentication successful. Your session is now active.'}
         </Alert>
       )}
 
@@ -90,7 +101,7 @@ export function SuccessRenderer({
           variant="destructive"
           className="w-full"
         >
-          Sign Out
+          {locale.auth?.signOut || 'Sign Out'}
         </Button>
       )}
     </div>

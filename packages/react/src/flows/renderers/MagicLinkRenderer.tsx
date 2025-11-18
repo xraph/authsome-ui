@@ -5,7 +5,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { FlowState } from '@authsome/ui-core';
+import { defaultLocale } from '@authsome/ui-core';
 
 export interface MagicLinkRendererProps {
   state: FlowState;
@@ -13,18 +15,21 @@ export interface MagicLinkRendererProps {
   onBack?: () => Promise<void>;
   isLoading: boolean;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
 }
 
 export function MagicLinkRenderer({
   state,
   onNext,
-  onBack,
+  onBack: _onBack,
   isLoading,
   uiComponents,
+  rendererConfig,
 }: MagicLinkRendererProps) {
   const { sendMagicLink } = useAuth();
-  const { Input, Button, Alert, icons } = uiComponents;
-  const MailIcon = icons?.mail;
+  const { Input, Button, Alert, Field, icons } = uiComponents;
+  const MagicLinkIcon = icons?.magicLink || icons?.mail;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const [email, setEmail] = useState(state.email || '');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +37,11 @@ export function MagicLinkRenderer({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!sendMagicLink) {
+      setError(locale.errors?.generic || 'Magic link is not available');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
@@ -39,7 +49,7 @@ export function MagicLinkRenderer({
       await sendMagicLink({ email });
       await onNext({ email });
     } catch (err: any) {
-      setError(err.message || 'Failed to send magic link');
+      setError(err.message || locale.errors?.generic || 'Failed to send magic link');
     } finally {
       setLoading(false);
     }
@@ -48,10 +58,14 @@ export function MagicLinkRenderer({
   return (
     <div className="space-y-6">
       <div className="text-center">
-        {MailIcon && <MailIcon className="mx-auto h-12 w-12 text-blue-600" />}
-        <h2 className="mt-4 text-2xl font-bold tracking-tight">Magic Link</h2>
+        {MagicLinkIcon ? (
+          <MagicLinkIcon className="mx-auto h-12 w-12 text-blue-600" />
+        ) : (
+          <span className="text-6xl">✉️</span>
+        )}
+        <h2 className="mt-4 text-2xl font-bold tracking-tight">{locale.magicLink?.sendLink || 'Magic Link'}</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Enter your email to receive a magic link
+          {locale.magicLink?.enterEmail || 'Enter your email to receive a magic link'}
         </p>
       </div>
 
@@ -60,36 +74,30 @@ export function MagicLinkRenderer({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Field.Field>
+          <Field.FieldLabel htmlFor="email">{locale.auth?.email || 'Email Address'}</Field.FieldLabel>
         <Input
+            id="email"
           type="email"
-          label="Email Address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="john@example.com"
+          placeholder={locale.placeholders?.email || 'john@example.com'}
           required
           disabled={loading || isLoading}
-          helperText="We'll send you a secure link to sign in"
-        />
+            aria-invalid={!!error}
+          />
+          <Field.FieldDescription>
+            We&apos;ll send you a secure link to sign in
+          </Field.FieldDescription>
+        </Field.Field>
 
-        <div className="flex gap-2">
-          {onBack && (
-            <Button
-              type="button"
-              onClick={onBack}
-              variant="outline"
-              disabled={loading || isLoading}
-            >
-              Back
-            </Button>
-          )}
           <Button
             type="submit"
             loading={loading || isLoading}
-            className="flex-1"
+          className="w-full"
           >
-            Send Magic Link
+            {locale.magicLink?.sendLink || 'Send Magic Link'}
           </Button>
-        </div>
       </form>
     </div>
   );
@@ -98,21 +106,28 @@ export function MagicLinkRenderer({
 export function MagicLinkSentRenderer({
   state,
   uiComponents,
+  rendererConfig,
 }: {
   state: FlowState;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
 }) {
   const { Alert, icons } = uiComponents;
-  const MailIcon = icons?.mail;
+  const MagicLinkIcon = icons?.magicLink || icons?.mail;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   return (
     <div className="space-y-6 text-center py-6">
-      {MailIcon && <MailIcon className="mx-auto h-16 w-16 text-blue-600" />}
+      {MagicLinkIcon ? (
+        <MagicLinkIcon className="mx-auto h-16 w-16 text-blue-600" />
+      ) : (
+        <span className="text-6xl">✉️</span>
+      )}
       
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Check Your Email</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{locale.magicLink?.checkEmail || 'Check Your Email'}</h2>
         <p className="text-gray-600 mt-2">
-          We sent a magic link to
+          {locale.magicLink?.linkSent || 'We sent a magic link to'}
         </p>
         <p className="font-semibold mt-1">{state.email}</p>
       </div>
@@ -129,4 +144,3 @@ export function MagicLinkSentRenderer({
     </div>
   );
 }
-

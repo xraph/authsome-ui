@@ -57,6 +57,11 @@ export class AuthClient {
 
   // Observable state
   public readonly state: Observable<AuthContext>;
+  
+  // Expose adapter for accessing provider-specific methods
+  public get adapter(): AuthProvider {
+    return this.provider;
+  }
 
   constructor(config: AuthClientConfig) {
     this.provider = config.provider;

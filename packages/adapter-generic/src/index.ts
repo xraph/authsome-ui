@@ -5,7 +5,9 @@
  * by providing URL endpoints and transformation functions.
  */
 
+import { AuthError, AuthErrorType } from '@authsome/ui-core';
 import type {
+  AuthProvider,
   User,
   Session,
   AuthResponse,
@@ -22,17 +24,21 @@ import type {
   PhoneAuthRequest,
   PhoneVerifyRequest,
   TwoFactorSetupRequest,
+  TwoFactorSetupResponse,
   TwoFactorVerifyRequest,
   PasskeyRegisterRequest,
   PasskeyAuthRequest,
   PasskeyCredential,
+  OAuthProvider,
+  TwoFactorMethod,
+  ProviderConfig,
+  FieldDefinition,
 } from '@authsome/ui-core';
-import { AuthErrorType, BaseAuthProvider, TokenManager, createAuthError } from '@authsome/ui-core';
 
 /**
  * Generic adapter configuration
  */
-export interface GenericAdapterConfig {
+export interface GenericAdapterConfig extends ProviderConfig {
   // Base API URL
   apiUrl: string;
 
@@ -44,7 +50,7 @@ export interface GenericAdapterConfig {
     signIn?: string;
     signUp?: string;
     signOut?: string;
-    refreshToken?: string;
+    refreshSession?: string;
     getUser?: string;
     updateUser?: string;
     changePassword?: string;
@@ -52,14 +58,19 @@ export interface GenericAdapterConfig {
     resetPasswordConfirm?: string;
     oauthSignIn?: string;
     oauthCallback?: string;
+    oauthProviders?: string;
     magicLink?: string;
     magicLinkVerify?: string;
     phoneAuth?: string;
     phoneVerify?: string;
     twoFactorSetup?: string;
     twoFactorVerify?: string;
+    twoFactorDisable?: string;
+    twoFactorStatus?: string;
     passkeyRegister?: string;
     passkeyAuth?: string;
+    passkeyList?: string;
+    passkeyDelete?: string;
   };
 
   // Optional response transformers
@@ -80,22 +91,29 @@ export interface GenericAdapterConfig {
 /**
  * Generic adapter for custom backends
  */
-export class GenericAdapter extends BaseAuthProvider {
-  private config: Required<GenericAdapterConfig>;
-  private tokenManager: TokenManager;
+export class GenericAdapter implements AuthProvider {
+  readonly name = 'generic';
+  
+  private config: GenericAdapterConfig | null = null;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private initialized = false;
 
-  constructor(config: GenericAdapterConfig) {
-    super();
+  async initialize(config: ProviderConfig): Promise<void> {
+    this.config = config as GenericAdapterConfig;
+    
+    if (!this.config.apiUrl) {
+      throw new Error('Generic adapter requires apiUrl in config');
+    }
     
     // Set default endpoints
     this.config = {
-      ...config,
-      headers: config.headers || {},
+      ...this.config,
       endpoints: {
-        signIn: '/auth/sign-in',
-        signUp: '/auth/sign-up',
-        signOut: '/auth/sign-out',
-        refreshToken: '/auth/refresh',
+        signIn: '/auth/signin',
+        signUp: '/auth/signup',
+        signOut: '/auth/signout',
+        refreshSession: '/auth/refresh',
         getUser: '/auth/user',
         updateUser: '/auth/user',
         changePassword: '/auth/password/change',
@@ -103,62 +121,36 @@ export class GenericAdapter extends BaseAuthProvider {
         resetPasswordConfirm: '/auth/password/reset/confirm',
         oauthSignIn: '/auth/oauth',
         oauthCallback: '/auth/oauth/callback',
+        oauthProviders: '/auth/oauth/providers',
         magicLink: '/auth/magic-link',
         magicLinkVerify: '/auth/magic-link/verify',
         phoneAuth: '/auth/phone',
         phoneVerify: '/auth/phone/verify',
         twoFactorSetup: '/auth/2fa/setup',
         twoFactorVerify: '/auth/2fa/verify',
+        twoFactorDisable: '/auth/2fa/disable',
+        twoFactorStatus: '/auth/2fa/status',
         passkeyRegister: '/auth/passkey/register',
         passkeyAuth: '/auth/passkey/auth',
-        ...config.endpoints,
+        passkeyList: '/auth/passkey/list',
+        passkeyDelete: '/auth/passkey/delete',
+        ...this.config.endpoints,
       },
-      transformers: config.transformers || {},
+      transformers: this.config.transformers || {},
       tokenConfig: {
         accessTokenKey: 'accessToken',
         refreshTokenKey: 'refreshToken',
         expiresAtKey: 'expiresAt',
-        ...config.tokenConfig,
+        ...this.config.tokenConfig,
       },
-    } as Required<GenericAdapterConfig>;
-
-    this.tokenManager = new TokenManager();
+    };
+    
+    this.initialized = true;
   }
 
-  async initialize(): Promise<void> {
-    // Check if we have stored tokens
-    const tokens = this.tokenManager.getTokens();
-    if (!tokens) {
-      this.setState({
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      return;
-    }
-
-    // Try to get current user
-    try {
-      const user = await this.getUser();
-      this.setState({
-        user,
-        session: {
-          user,
-          expiresAt: tokens.expiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        },
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch {
-      // Token might be invalid
-      this.tokenManager.clearTokens();
-      this.setState({
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+  private ensureInitialized(): void {
+    if (!this.initialized || !this.config) {
+      throw new Error('Generic adapter not initialized. Call initialize() first.');
     }
   }
 
@@ -166,41 +158,40 @@ export class GenericAdapter extends BaseAuthProvider {
    * Make HTTP request to API
    */
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.config.apiUrl}${endpoint}`;
-    const tokens = this.tokenManager.getTokens();
+    this.ensureInitialized();
+    
+    const url = `${this.config!.apiUrl}${endpoint}`;
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...this.config.headers,
-      ...options.headers,
+      ...this.config!.headers,
+      ...(options.headers as Record<string, string>),
     };
 
-    if (tokens?.accessToken) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${tokens.accessToken}`;
+    if (this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw createAuthError(
-        error.message || 'Request failed',
-        AuthErrorType.NETWORK_ERROR,
-        error
-      );
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: response.statusText }));
+        throw this.normalizeError(error);
+      }
+
+      return response.json();
+    } catch (error) {
+      throw this.normalizeError(error);
     }
-
-    return response.json();
   }
 
   async signIn(request: SignInRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-
     const data = await this.request<unknown>(
-      this.config.endpoints.signIn!,
+      this.config!.endpoints!.signIn!,
       {
         method: 'POST',
         body: JSON.stringify(request),
@@ -211,10 +202,8 @@ export class GenericAdapter extends BaseAuthProvider {
   }
 
   async signUp(request: SignUpRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-
     const data = await this.request<unknown>(
-      this.config.endpoints.signUp!,
+      this.config!.endpoints!.signUp!,
       {
         method: 'POST',
         body: JSON.stringify(request),
@@ -225,70 +214,83 @@ export class GenericAdapter extends BaseAuthProvider {
   }
 
   async signOut(): Promise<void> {
-    await this.ensureInitialized();
-
     try {
-      await this.request(this.config.endpoints.signOut!, {
+      await this.request(this.config!.endpoints!.signOut!, {
         method: 'POST',
       });
     } finally {
-      this.tokenManager.clearTokens();
-      this.setState({
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+      this.accessToken = null;
+      this.refreshToken = null;
     }
   }
 
-  async refreshToken(): Promise<AuthResponse> {
-    await this.ensureInitialized();
+  async getCurrentUser(): Promise<User | null> {
+    if (!this.accessToken) {
+      return null;
+    }
 
-    const tokens = this.tokenManager.getTokens();
-    if (!tokens?.refreshToken) {
-      throw createAuthError('No refresh token available', AuthErrorType.UNAUTHORIZED);
+    try {
+      const data = await this.request<unknown>(this.config!.endpoints!.getUser!);
+      return this.config!.transformers!.user?.(data) || (data as User);
+    } catch {
+      return null;
+    }
+  }
+
+  async getCurrentSession(): Promise<Session | null> {
+    if (!this.accessToken) {
+      return null;
+    }
+
+    const user = await this.getCurrentUser();
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: this.accessToken.substring(0, 16), // Use token prefix as session ID
+      userId: user.id,
+      token: this.accessToken,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+  }
+
+  async refreshSession(): Promise<Session> {
+    if (!this.refreshToken) {
+      throw new AuthError('No refresh token available', AuthErrorType.TOKEN_EXPIRED);
     }
 
     const data = await this.request<unknown>(
-      this.config.endpoints.refreshToken!,
+      this.config!.endpoints!.refreshSession!,
       {
         method: 'POST',
-        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
       }
     );
 
-    return this.processAuthResponse(data);
-  }
+    const authResponse = this.processAuthResponse(data);
+    if (!authResponse.session) {
+      throw new AuthError('Failed to refresh session', AuthErrorType.TOKEN_EXPIRED);
+    }
 
-  async getUser(): Promise<User> {
-    await this.ensureInitialized();
-
-    const data = await this.request<unknown>(this.config.endpoints.getUser!);
-    return this.config.transformers.user?.(data) || (data as User);
+    return authResponse.session;
   }
 
   async updateUser(request: UpdateUserRequest): Promise<User> {
-    await this.ensureInitialized();
-
     const data = await this.request<unknown>(
-      this.config.endpoints.updateUser!,
+      this.config!.endpoints!.updateUser!,
       {
         method: 'PATCH',
         body: JSON.stringify(request),
       }
     );
 
-    const user = this.config.transformers.user?.(data) || (data as User);
-    this.setState({ user });
-    return user;
+    return this.config!.transformers!.user?.(data) || (data as User);
   }
 
   async changePassword(request: PasswordChangeRequest): Promise<void> {
-    await this.ensureInitialized();
-
     await this.request(
-      this.config.endpoints.changePassword!,
+      this.config!.endpoints!.changePassword!,
       {
         method: 'POST',
         body: JSON.stringify(request),
@@ -296,11 +298,9 @@ export class GenericAdapter extends BaseAuthProvider {
     );
   }
 
-  async resetPassword(request: PasswordResetRequest): Promise<void> {
-    await this.ensureInitialized();
-
+  async requestPasswordReset(request: PasswordResetRequest): Promise<void> {
     await this.request(
-      this.config.endpoints.resetPassword!,
+      this.config!.endpoints!.resetPassword!,
       {
         method: 'POST',
         body: JSON.stringify(request),
@@ -308,11 +308,9 @@ export class GenericAdapter extends BaseAuthProvider {
     );
   }
 
-  async resetPasswordConfirm(request: PasswordResetConfirmRequest): Promise<void> {
-    await this.ensureInitialized();
-
+  async confirmPasswordReset(request: PasswordResetConfirmRequest): Promise<void> {
     await this.request(
-      this.config.endpoints.resetPasswordConfirm!,
+      this.config!.endpoints!.resetPasswordConfirm!,
       {
         method: 'POST',
         body: JSON.stringify(request),
@@ -320,90 +318,194 @@ export class GenericAdapter extends BaseAuthProvider {
     );
   }
 
-  async oauthSignIn(_request: OAuthSignInRequest): Promise<void> {
-    await this.ensureInitialized();
-    throw createAuthError('OAuth not implemented', AuthErrorType.NOT_SUPPORTED);
+  async oauthSignIn(request: OAuthSignInRequest): Promise<string> {
+    const data = await this.request<{ url: string }>(
+      this.config!.endpoints!.oauthSignIn!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+    
+    return data.url;
   }
 
-  async oauthCallback(_request: OAuthCallbackRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-    throw createAuthError('OAuth not implemented', AuthErrorType.NOT_SUPPORTED);
+  async oauthCallback(request: OAuthCallbackRequest): Promise<AuthResponse> {
+    const data = await this.request<unknown>(
+      this.config!.endpoints!.oauthCallback!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+
+    return this.processAuthResponse(data);
   }
 
-  async magicLink(_request: MagicLinkRequest): Promise<void> {
-    await this.ensureInitialized();
-    throw createAuthError('Magic link not implemented', AuthErrorType.NOT_SUPPORTED);
+  async getOAuthProviders(): Promise<OAuthProvider[]> {
+    const data = await this.request<{ providers: OAuthProvider[] }>(
+      this.config!.endpoints!.oauthProviders!
+    );
+    
+    return data.providers;
   }
 
-  async magicLinkVerify(_request: MagicLinkVerifyRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-    throw createAuthError('Magic link not implemented', AuthErrorType.NOT_SUPPORTED);
+  async sendMagicLink(request: MagicLinkRequest): Promise<void> {
+    await this.request(
+      this.config!.endpoints!.magicLink!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
   }
 
-  async phoneAuth(_request: PhoneAuthRequest): Promise<void> {
-    await this.ensureInitialized();
-    throw createAuthError('Phone auth not implemented', AuthErrorType.NOT_SUPPORTED);
+  async verifyMagicLink(request: MagicLinkVerifyRequest): Promise<AuthResponse> {
+    const data = await this.request<unknown>(
+      this.config!.endpoints!.magicLinkVerify!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+
+    return this.processAuthResponse(data);
   }
 
-  async phoneVerify(_request: PhoneVerifyRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-    throw createAuthError('Phone auth not implemented', AuthErrorType.NOT_SUPPORTED);
+  async sendPhoneCode(request: PhoneAuthRequest): Promise<void> {
+    await this.request(
+      this.config!.endpoints!.phoneAuth!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
   }
 
-  async twoFactorSetup(_request: TwoFactorSetupRequest): Promise<{
-    secret: string;
-    qrCode: string;
-    backupCodes: string[];
-  }> {
-    await this.ensureInitialized();
-    throw createAuthError('2FA not implemented', AuthErrorType.NOT_SUPPORTED);
+  async verifyPhoneCode(request: PhoneVerifyRequest): Promise<AuthResponse> {
+    const data = await this.request<unknown>(
+      this.config!.endpoints!.phoneVerify!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+
+    return this.processAuthResponse(data);
   }
 
-  async twoFactorVerify(_request: TwoFactorVerifyRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-    throw createAuthError('2FA not implemented', AuthErrorType.NOT_SUPPORTED);
+  async setupTwoFactor(request: TwoFactorSetupRequest): Promise<TwoFactorSetupResponse> {
+    return await this.request<TwoFactorSetupResponse>(
+      this.config!.endpoints!.twoFactorSetup!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
   }
 
-  async passkeyRegister(_request: PasskeyRegisterRequest): Promise<PasskeyCredential> {
-    await this.ensureInitialized();
-    throw createAuthError('Passkeys not implemented', AuthErrorType.NOT_SUPPORTED);
+  async verifyTwoFactor(request: TwoFactorVerifyRequest): Promise<AuthResponse> {
+    const data = await this.request<unknown>(
+      this.config!.endpoints!.twoFactorVerify!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+
+    return this.processAuthResponse(data);
   }
 
-  async passkeyAuth(_request: PasskeyAuthRequest): Promise<AuthResponse> {
-    await this.ensureInitialized();
-    throw createAuthError('Passkeys not implemented', AuthErrorType.NOT_SUPPORTED);
+  async disableTwoFactor(): Promise<void> {
+    await this.request(
+      this.config!.endpoints!.twoFactorDisable!,
+      {
+        method: 'POST',
+      }
+    );
+  }
+
+  async getTwoFactorStatus(): Promise<TwoFactorMethod[]> {
+    const data = await this.request<{ methods: TwoFactorMethod[] }>(
+      this.config!.endpoints!.twoFactorStatus!
+    );
+    
+    return data.methods;
+  }
+
+  async registerPasskey(request: PasskeyRegisterRequest): Promise<PasskeyCredential> {
+    return await this.request<PasskeyCredential>(
+      this.config!.endpoints!.passkeyRegister!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+  }
+
+  async authenticatePasskey(request: PasskeyAuthRequest): Promise<AuthResponse> {
+    const data = await this.request<unknown>(
+      this.config!.endpoints!.passkeyAuth!,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
+
+    return this.processAuthResponse(data);
+  }
+
+  async listPasskeys(): Promise<PasskeyCredential[]> {
+    const data = await this.request<{ passkeys: PasskeyCredential[] }>(
+      this.config!.endpoints!.passkeyList!
+    );
+    
+    return data.passkeys;
+  }
+
+  async deletePasskey(credentialId: string): Promise<void> {
+    await this.request(
+      `${this.config!.endpoints!.passkeyDelete!}/${credentialId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
+
+  /**
+   * Get dynamic signup fields (stub implementation)
+   */
+  async getSignupFields(): Promise<FieldDefinition[]> {
+    return [];
   }
 
   /**
    * Process authentication response
    */
   private processAuthResponse(data: unknown): AuthResponse {
-    const authResponse = this.config.transformers.authResponse?.(data) || (data as AuthResponse);
+    const authResponse = this.config!.transformers!.authResponse?.(data) || (data as AuthResponse);
 
     // Store tokens
-    const tokenConfig = this.config.tokenConfig;
-    const accessToken = (data as Record<string, unknown>)[tokenConfig.accessTokenKey!] as string;
-    const refreshToken = (data as Record<string, unknown>)[tokenConfig.refreshTokenKey!] as string;
-    const expiresAt = (data as Record<string, unknown>)[tokenConfig.expiresAtKey!] as string;
-
-    if (accessToken) {
-      this.tokenManager.setTokens({
-        accessToken,
-        refreshToken,
-        expiresAt,
-      });
-    }
-
-    // Update state
-    if (authResponse.user) {
-      this.setState({
-        user: authResponse.user,
-        session: authResponse.session,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    }
+    const tokenConfig = this.config!.tokenConfig!;
+    this.accessToken = (data as Record<string, unknown>)[tokenConfig.accessTokenKey!] as string || null;
+    this.refreshToken = (data as Record<string, unknown>)[tokenConfig.refreshTokenKey!] as string || null;
 
     return authResponse;
+  }
+
+  /**
+   * Normalize error to AuthError
+   */
+  normalizeError(error: unknown): AuthError {
+    if (error instanceof AuthError) {
+      return error;
+    }
+    
+    const message = (error as Error).message || 'Unknown error';
+    const type = (error as any).type || AuthErrorType.UNKNOWN_ERROR;
+    
+    return new AuthError(message, type, {
+      originalError: error,
+    });
   }
 }

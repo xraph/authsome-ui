@@ -3,18 +3,20 @@
  */
 
 import React, { createContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { FlowEngine, FlowAction, createLocale } from '@authsome/ui-core';
 import type { 
   AuthClient, 
   AuthContext as AuthStateContext,
-  FlowEngine,
   FlowConfig,
   FlowState,
   FlowEvent,
-  FlowAction,
   Organization,
+  AuthLocale,
+  DeepPartial,
 } from '@authsome/ui-core';
 import type { UIComponents } from '../flows/ui-components';
 import type { RendererConfig } from '../flows/renderer-config';
+import { FlowContext, type FlowContextValue } from '../flows/FlowContext';
 import { validateUIComponents } from '../flows/ui-components';
 import { mergeRendererConfig } from '../flows/renderer-config';
 import {
@@ -28,6 +30,7 @@ import {
   DefaultLabel,
   DefaultSelect,
   DefaultTextarea,
+  DefaultField,
 } from '../flows/default-components';
 
 /**
@@ -35,6 +38,7 @@ import {
  */
 export interface AuthContextValue extends AuthStateContext {
   client: AuthClient;
+  adapter?: AuthClient['adapter']; // Expose adapter for dynamic field access
   
   // Direct method access (delegates to client) - all optional to handle methods that may not exist
   // Core auth methods
@@ -120,6 +124,9 @@ export interface AuthProviderProps {
   rendererConfig?: RendererConfig;
   onFlowStateChange?: (state: FlowState) => void;
   
+  // Locale configuration (i18n support)
+  locale?: DeepPartial<AuthLocale>;
+  
   // Organization callbacks
   onOrganizationChange?: (org: Organization | null) => void;
 }
@@ -137,13 +144,31 @@ export function AuthProvider({
   initialFlowState,
   uiComponents = {},
   rendererConfig,
+  locale,
   onFlowStateChange,
   onOrganizationChange,
 }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthStateContext>(client.state.getValue());
   
+  // Create complete locale by merging with defaults
+  const completeLocale = useMemo(() => {
+    // Merge locale from props and rendererConfig.locale
+    const mergedLocaleOverrides = {
+      ...rendererConfig?.locale,
+      ...locale,
+    };
+    return createLocale(mergedLocaleOverrides);
+  }, [rendererConfig?.locale, locale]);
+  
   // Flow state management (merged from FlowProvider)
-  const completeRendererConfig = useMemo(() => mergeRendererConfig(rendererConfig), [rendererConfig]);
+  const completeRendererConfig = useMemo(() => {
+    const merged = mergeRendererConfig(rendererConfig);
+    // Attach complete locale to renderer config for easy access in renderers
+    return {
+      ...merged,
+      locale: completeLocale,
+    };
+  }, [rendererConfig, completeLocale]);
   const completeUIComponents: UIComponents = useMemo(() => {
     const validation = validateUIComponents(uiComponents);
     
@@ -164,6 +189,7 @@ export function AuthProvider({
     return {
       Input: uiComponents.Input || DefaultInput,
       Button: uiComponents.Button || DefaultButton,
+      Field: uiComponents.Field || DefaultField,
       Checkbox: uiComponents.Checkbox || DefaultCheckbox,
       Label: uiComponents.Label || DefaultLabel,
       Select: uiComponents.Select || DefaultSelect,
@@ -173,6 +199,7 @@ export function AuthProvider({
       Divider: uiComponents.Divider || DefaultDivider,
       Link: uiComponents.Link || DefaultLink,
       icons: uiComponents.icons,
+      providerIcons: uiComponents.providerIcons,
     };
   }, [uiComponents]);
 
@@ -291,6 +318,7 @@ export function AuthProvider({
     () => ({
       ...authState,
       client,
+      adapter: client.adapter, // Expose adapter for dynamic field access
       
       // Expose methods directly for better DX (with safe binding)
       // Core auth methods
@@ -377,6 +405,49 @@ export function AuthProvider({
     ]
   );
 
-  return <AuthReactContext.Provider value={value}>{children}</AuthReactContext.Provider>;
+  // Create FlowContext value for AuthFlow compatibility
+  const flowContextValue = useMemo<FlowContextValue | null>(() => {
+    if (!flowEngine || !flowState) {
+      return null;
+    }
+    
+    return {
+      engine: flowEngine,
+      state: flowState,
+      dispatch,
+      next: nextFlow,
+      back: backFlow,
+      cancel: cancelFlow,
+      reset: resetFlow,
+      canGoBack: flowEngine.canGoBack(),
+      currentStep: flowState.currentStep,
+      isLoading: isFlowLoading,
+      uiComponents: completeUIComponents,
+      rendererConfig: completeRendererConfig,
+    };
+  }, [
+    flowEngine,
+    flowState,
+    dispatch,
+    nextFlow,
+    backFlow,
+    cancelFlow,
+    resetFlow,
+    isFlowLoading,
+    completeUIComponents,
+    completeRendererConfig,
+  ]);
+
+  return (
+    <AuthReactContext.Provider value={value}>
+      {flowContextValue ? (
+        <FlowContext.Provider value={flowContextValue}>
+          {children}
+        </FlowContext.Provider>
+      ) : (
+        children
+      )}
+    </AuthReactContext.Provider>
+  );
 }
 

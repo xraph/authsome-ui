@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { FlowEngine, FlowAction, type FlowConfig, type FlowState, type FlowEvent } from '@authsome/ui-core';
+import { FlowEngine, FlowAction, createLocale, type FlowConfig, type FlowState, type FlowEvent, type AuthLocale, type DeepPartial } from '@authsome/ui-core';
 import { FlowContext, type FlowContextValue } from './FlowContext';
 import type { UIComponents } from './ui-components';
 import { validateUIComponents } from './ui-components';
@@ -20,6 +20,7 @@ import {
   DefaultLabel,
   DefaultSelect,
   DefaultTextarea,
+  DefaultField,
 } from './default-components';
 
 export interface FlowProviderProps {
@@ -45,6 +46,11 @@ export interface FlowProviderProps {
   rendererConfig?: RendererConfig;
   
   /**
+   * Locale configuration for internationalization
+   */
+  locale?: DeepPartial<AuthLocale>;
+  
+  /**
    * Children
    */
   children: React.ReactNode;
@@ -55,9 +61,24 @@ export interface FlowProviderProps {
   onStateChange?: (state: FlowState) => void;
 }
 
-export function FlowProvider({ config, initialState, uiComponents = {}, rendererConfig, children, onStateChange }: FlowProviderProps) {
-  // Merge renderer config with defaults
-  const completeRendererConfig = useMemo(() => mergeRendererConfig(rendererConfig), [rendererConfig]);
+export function FlowProvider({ config, initialState, uiComponents = {}, rendererConfig, locale, children, onStateChange }: FlowProviderProps) {
+  // Create complete locale by merging with defaults
+  const completeLocale = useMemo(() => {
+    const mergedLocaleOverrides = {
+      ...rendererConfig?.locale,
+      ...locale,
+    };
+    return createLocale(mergedLocaleOverrides);
+  }, [rendererConfig?.locale, locale]);
+  
+  // Merge renderer config with defaults and attach locale
+  const completeRendererConfig = useMemo(() => {
+    const merged = mergeRendererConfig(rendererConfig);
+    return {
+      ...merged,
+      locale: completeLocale,
+    };
+  }, [rendererConfig, completeLocale]);
 
   // Validate and merge UI components with defaults
   const completeUIComponents: UIComponents = useMemo(() => {
@@ -80,6 +101,7 @@ export function FlowProvider({ config, initialState, uiComponents = {}, renderer
     return {
       Input: uiComponents.Input || DefaultInput,
       Button: uiComponents.Button || DefaultButton,
+      Field: uiComponents.Field || DefaultField,
       Checkbox: uiComponents.Checkbox || DefaultCheckbox,
       Label: uiComponents.Label || DefaultLabel,
       Select: uiComponents.Select || DefaultSelect,
@@ -89,6 +111,7 @@ export function FlowProvider({ config, initialState, uiComponents = {}, renderer
       Divider: uiComponents.Divider || DefaultDivider,
       Link: uiComponents.Link || DefaultLink,
       icons: uiComponents.icons,
+      providerIcons: uiComponents.providerIcons,
     };
   }, [uiComponents]);
 

@@ -60,7 +60,7 @@ export function createBuiltInRenderers(uiComponents: UIComponents, rendererConfi
 
     // OAuth flows
     [FlowStep.OAUTH_SELECT]: (props: any) => (
-      <OAuthRenderer {...props} uiComponents={uiComponents} />
+      <OAuthRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.OAUTH_CALLBACK]: (props: any) => (
       <OAuthCallbackRenderer {...props} uiComponents={uiComponents} />

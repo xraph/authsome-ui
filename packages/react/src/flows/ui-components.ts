@@ -8,11 +8,10 @@ import type { ReactNode, ComponentType, InputHTMLAttributes, ButtonHTMLAttribute
 
 /**
  * Input component props
+ * Note: Use Field components for labels, errors, and helper text
  */
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
+  // Labels, errors, and helper text are now handled by Field components
 }
 
 /**
@@ -62,6 +61,7 @@ export interface LinkProps {
 
 /**
  * Checkbox component props
+ * Supports both native HTML checkbox and Radix UI / shadcn patterns
  */
 export interface CheckboxProps {
   label?: ReactNode;
@@ -69,9 +69,11 @@ export interface CheckboxProps {
   error?: string;
   checked?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  id?: string;
 }
 
 /**
@@ -128,15 +130,30 @@ export interface TextareaProps {
   required?: boolean;
   rows?: number;
   className?: string;
+  id?: string;
+}
+
+/**
+ * Field components for form structure (shadcn Field pattern)
+ */
+export interface FieldComponents {
+  Field: ComponentType<any>;
+  FieldLabel: ComponentType<any>;
+  FieldDescription: ComponentType<any>;
+  FieldError: ComponentType<any>;
+  FieldSet?: ComponentType<any>;
+  FieldLegend?: ComponentType<any>;
+  FieldGroup?: ComponentType<any>;
 }
 
 /**
  * Complete UI component collection
  */
 export interface UIComponents {
-  // Form components
+  // Form components (required)
   Input: ComponentType<InputProps>;
   Button: ComponentType<ButtonProps>;
+  Field: FieldComponents;
   
   // Layout components
   Card?: ComponentType<CardProps>;
@@ -158,13 +175,18 @@ export interface UIComponents {
     key?: ComponentType<{ className?: string }>;
     shield?: ComponentType<{ className?: string }>;
     user?: ComponentType<{ className?: string }>;
+    passkey?: ComponentType<{ className?: string }>;
+    magicLink?: ComponentType<{ className?: string }>;
   };
+  
+  // OAuth provider icons (optional)
+  providerIcons?: Record<string, ComponentType<{ className?: string }>>;
 }
 
 /**
  * Required UI components
  */
-export const REQUIRED_COMPONENTS: (keyof UIComponents)[] = ['Input', 'Button'];
+export const REQUIRED_COMPONENTS: (keyof UIComponents)[] = ['Input', 'Button', 'Field'];
 
 /**
  * Validate UI components

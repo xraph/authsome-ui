@@ -5,7 +5,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { FlowState } from '@authsome/ui-core';
+import { defaultLocale } from '@authsome/ui-core';
 
 export interface PhoneAuthRendererProps {
   state: FlowState;
@@ -13,6 +15,7 @@ export interface PhoneAuthRendererProps {
   onBack?: () => Promise<void>;
   isLoading: boolean;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
 }
 
 export function PhoneAuthRenderer({
@@ -21,10 +24,12 @@ export function PhoneAuthRenderer({
   onBack,
   isLoading,
   uiComponents,
+  rendererConfig,
 }: PhoneAuthRendererProps) {
-  const { requestPhoneAuth } = useAuth();
-  const { Input, Button, Alert, icons } = uiComponents;
+  const { sendPhoneCode } = useAuth();
+  const { Input, Button, Alert, Field, icons } = uiComponents;
   const PhoneIcon = icons?.phone;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const [phone, setPhone] = useState(state.phone || '');
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +41,10 @@ export function PhoneAuthRenderer({
     setLoading(true);
 
     try {
-      await requestPhoneAuth({ phone });
+      await sendPhoneCode?.({ phone });
       await onNext({ phone });
     } catch (err: any) {
-      setError(err.message || 'Failed to send verification code');
+      setError(err.message || locale.errors?.generic || 'Failed to send verification code');
     } finally {
       setLoading(false);
     }
@@ -49,9 +54,9 @@ export function PhoneAuthRenderer({
     <div className="space-y-6">
       <div className="text-center">
         {PhoneIcon && <PhoneIcon className="mx-auto h-12 w-12 text-blue-600" />}
-        <h2 className="mt-4 text-2xl font-bold tracking-tight">Phone Verification</h2>
+        <h2 className="mt-4 text-2xl font-bold tracking-tight">{locale.phone?.verifyPhone || 'Phone Verification'}</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Enter your phone number to receive a verification code
+          {locale.phone?.enterPhone || 'Enter your phone number to receive a verification code'}
         </p>
       </div>
 
@@ -60,16 +65,20 @@ export function PhoneAuthRenderer({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Field.Field>
+          <Field.FieldLabel htmlFor="phone">{locale.auth?.phone || 'Phone Number'}</Field.FieldLabel>
         <Input
+            id="phone"
           type="tel"
-          label="Phone Number"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="+1 (555) 000-0000"
+          placeholder={locale.placeholders?.phone || '+1 (555) 000-0000'}
           required
           disabled={loading || isLoading}
-          helperText="Include country code"
+            aria-invalid={!!error}
         />
+          <Field.FieldDescription>Include country code</Field.FieldDescription>
+        </Field.Field>
 
         <div className="flex gap-2">
           {onBack && (
@@ -79,7 +88,7 @@ export function PhoneAuthRenderer({
               variant="outline"
               disabled={loading || isLoading}
             >
-              Back
+              {locale.common?.back || 'Back'}
             </Button>
           )}
           <Button
@@ -87,7 +96,7 @@ export function PhoneAuthRenderer({
             loading={loading || isLoading}
             className="flex-1"
           >
-            Send Code
+            {locale.phone?.sendCode || 'Send Code'}
           </Button>
         </div>
       </form>
@@ -101,9 +110,11 @@ export function PhoneVerifyRenderer({
   onBack,
   isLoading,
   uiComponents,
+  rendererConfig,
 }: PhoneAuthRendererProps) {
-  const { verifyPhoneAuth } = useAuth();
-  const { Input, Button, Alert } = uiComponents;
+  const { verifyPhoneCode } = useAuth();
+  const { Input, Button, Alert, Field } = uiComponents;
+  const locale = rendererConfig?.locale || defaultLocale;
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -115,13 +126,10 @@ export function PhoneVerifyRenderer({
     setLoading(true);
 
     try {
-      const result = await verifyPhoneAuth({ phone: state.phone!, code });
-      await onNext({
-        user: result.user,
-        session: result.session,
-      });
+      await verifyPhoneCode?.({ phone: state.phone!, code });
+      await onNext();
     } catch (err: any) {
-      setError(err.message || 'Invalid verification code');
+      setError(err.message || locale.validation?.codeInvalid || 'Invalid verification code');
     } finally {
       setLoading(false);
     }
@@ -130,7 +138,7 @@ export function PhoneVerifyRenderer({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Enter Verification Code</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{locale.phone?.enterCode || 'Enter Verification Code'}</h2>
         <p className="text-sm text-gray-600 mt-1">
           We sent a 6-digit code to {state.phone}
         </p>
@@ -141,17 +149,21 @@ export function PhoneVerifyRenderer({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <Field.Field>
+          <Field.FieldLabel htmlFor="code">{locale.phone?.codeLabel || 'Verification Code'}</Field.FieldLabel>
         <Input
+            id="code"
           type="text"
-          label="Verification Code"
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          placeholder="000000"
+          placeholder={locale.placeholders?.code || '000000'}
           maxLength={6}
           required
           disabled={loading || isLoading}
           className="text-center text-2xl tracking-widest"
+            aria-invalid={!!error}
         />
+        </Field.Field>
 
         <div className="flex gap-2">
           {onBack && (
@@ -161,7 +173,7 @@ export function PhoneVerifyRenderer({
               variant="outline"
               disabled={loading || isLoading}
             >
-              Back
+              {locale.common?.back || 'Back'}
             </Button>
           )}
           <Button
@@ -169,11 +181,10 @@ export function PhoneVerifyRenderer({
             loading={loading || isLoading}
             className="flex-1"
           >
-            Verify
+            {locale.mfa?.verify || 'Verify'}
           </Button>
         </div>
       </form>
     </div>
   );
 }
-

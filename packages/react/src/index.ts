@@ -29,7 +29,8 @@ export type {
   LabelProps,
   SelectProps,
   SelectComponents,
-  TextareaProps
+  TextareaProps,
+  FieldComponents
 } from './flows/ui-components';
 export { validateUIComponents, REQUIRED_COMPONENTS } from './flows/ui-components';
 
@@ -56,6 +57,7 @@ export {
   DefaultLabel,
   DefaultSelect,
   DefaultTextarea,
+  DefaultField,
 } from './flows/default-components';
 
 // Export built-in renderers
@@ -99,8 +101,13 @@ export type {
   FlowAction,
   FlowTransition,
   FlowConfigType,
+  FlowEngine,
 } from '@authsome/ui-core';
 
 // Re-export flow functions from core (for convenience)
 export { getFlowConfig, predefinedFlows } from '@authsome/ui-core';
+
+// Re-export locale types and utilities from core (for i18n support)
+export type { AuthLocale, DeepPartial } from '@authsome/ui-core';
+export { defaultLocale, createLocale, interpolate } from '@authsome/ui-core';
 

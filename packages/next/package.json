@@ -1,0 +1,77 @@
+{
+  "name": "@authsome/ui-next",
+  "version": "0.1.0",
+  "description": "Next.js integration for AuthSome UI with App Router support, middleware, and automatic OAuth handling",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "react-server": "./dist/server/index.mjs",
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js"
+    },
+    "./middleware": {
+      "edge-light": "./dist/middleware/index.mjs",
+      "types": "./dist/middleware/index.d.ts",
+      "import": "./dist/middleware/index.mjs",
+      "require": "./dist/middleware/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "authsome",
+    "nextjs",
+    "authentication",
+    "auth",
+    "oauth",
+    "middleware",
+    "app-router",
+    "server-components"
+  ],
+  "author": "AuthSome",
+  "license": "MIT",
+  "peerDependencies": {
+    "next": "^14.0.0 || ^15.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@authsome/ui-core": "workspace:*",
+    "@authsome/ui-react": "workspace:*",
+    "iron-session": "^8.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "next": "^15.5.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xraph/authsome-ui.git",
+    "directory": "packages/next"
+  }
+}
+
