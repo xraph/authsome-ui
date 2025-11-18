@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.3](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.2...ui-react-v0.1.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* add repository metadata to package.json files for core, react, and react-headless packages ([f1ee145](https://github.com/xraph/authsome-ui/commit/f1ee145e1e824b9c2b7e66fa07c3b278d606190e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authsome/ui-core bumped to 0.1.2
+
 ## [0.1.2](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.1...ui-react-v0.1.2) (2025-11-18)
 
 
