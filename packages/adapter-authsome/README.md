@@ -91,4 +91,3 @@ NEXT_PUBLIC_AUTHSOME_API_URL=https://auth.yourapp.com/api
 ## License
 
 MIT
-
