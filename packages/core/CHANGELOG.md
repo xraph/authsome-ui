@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.1...ui-core-v0.1.2) (2025-11-18)
+
+
+### Bug Fixes
+
+* add repository metadata to package.json files for core, react, and react-headless packages ([f1ee145](https://github.com/xraph/authsome-ui/commit/f1ee145e1e824b9c2b7e66fa07c3b278d606190e))
+
 ## [0.1.1](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.0...ui-core-v0.1.1) (2025-11-18)
 
 

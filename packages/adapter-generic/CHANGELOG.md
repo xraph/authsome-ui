@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3](https://github.com/xraph/authsome-ui/compare/adapter-generic-v0.1.2...adapter-generic-v0.1.3) (2025-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authsome/ui-core bumped to 0.1.2
+
 ## [0.1.2](https://github.com/xraph/authsome-ui/compare/adapter-generic-v0.1.1...adapter-generic-v0.1.2) (2025-11-18)
 
 
