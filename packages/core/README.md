@@ -2,6 +2,8 @@
 
 Framework-agnostic authentication core for AuthSome UI.
 
+> **Note:** Version 0.1.1+ includes fixes for workspace dependency resolution in published packages.
+
 ## Installation
 
 ```bash
