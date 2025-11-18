@@ -46,6 +46,11 @@
   ],
   "author": "Rex Raphael",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xraph/authsome-ui.git",
+    "directory": "packages/core"
+  },
   "devDependencies": {
     "@types/node": "^20.11.16",
     "tsup": "^8.0.2",

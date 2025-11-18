@@ -32,6 +32,11 @@
   ],
   "author": "Rex Raphael",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xraph/authsome-ui.git",
+    "directory": "packages/react-headless"
+  },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
