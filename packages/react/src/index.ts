@@ -17,7 +17,7 @@ export * from './components';
 export * from './flows';
 
 // Export UI component types and utilities
-export type { 
+export type {
   UIComponents, 
   InputProps, 
   ButtonProps, 
