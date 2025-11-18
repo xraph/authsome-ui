@@ -3,7 +3,7 @@
   "packages/react": "0.1.3",
   "packages/react-headless": "0.1.3",
   "packages/react-shadcn": "0.1.2",
-  "packages/next": "0.1.1",
+  "packages/next": "0.1.2",
   "packages/adapter-authsome": "0.1.4",
   "packages/adapter-clerk": "0.1.3",
   "packages/adapter-generic": "0.1.3",
