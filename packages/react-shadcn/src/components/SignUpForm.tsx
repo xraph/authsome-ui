@@ -7,24 +7,28 @@ import { SignUpForm as HeadlessSignUpForm } from '@authsome/ui-react-headless';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export interface SignUpFormProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  onSignInClick?: () => void;
   className?: string;
   title?: string;
   description?: string;
+  showSignInLink?: boolean;
 }
 
 export function SignUpForm({
   onSuccess,
   onError,
+  onSignInClick,
   className,
   title = 'Create Account',
   description = 'Enter your information to create an account',
+  showSignInLink = true,
 }: SignUpFormProps) {
   return (
     <HeadlessSignUpForm onSuccess={onSuccess} onError={onError}>
@@ -46,6 +50,13 @@ export function SignUpForm({
           <CardHeader>
             <CardTitle>{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
+            {showSignInLink && (
+              <CardAction>
+                <Button variant="link" onClick={onSignInClick} type="button">
+                  Sign In
+                </Button>
+              </CardAction>
+            )}
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">

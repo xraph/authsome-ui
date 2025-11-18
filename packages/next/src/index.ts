@@ -1,6 +1,8 @@
 /**
  * @authsome/ui-next
  * Next.js integration for AuthSome UI
+ * 
+ * Note: The 'use client' directive is automatically added during build via tsup.config.ts
  */
 
 // Components
@@ -9,7 +11,8 @@ export { AuthFlowClient } from './components/AuthFlowClient';
 export { ProtectedRoute } from './components/ProtectedRoute';
 
 // Hooks
-export { useAuthSync, useSessionRefresh } from './hooks/useAuthSync';
+// Note: useAuthSync and useSessionRefresh removed to avoid bundling server code
+// Users should implement custom session sync using fetch() if needed
 export { useProtectedRoute, useRequirePermissions } from './hooks/useProtectedRoute';
 
 // Constants (safe for client)

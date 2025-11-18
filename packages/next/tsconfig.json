@@ -10,7 +10,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "baseUrl": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -19,6 +19,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "incremental": false,
+    "composite": false,
     "paths": {
       "@authsome/ui-core": ["../core/dist/index.d.ts"],
       "@authsome/ui-react": ["../react/dist/index.d.ts"]

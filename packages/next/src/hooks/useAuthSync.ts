@@ -8,7 +8,13 @@ import { useEffect, useRef, useCallback } from 'react';
 import type { Session } from '@authsome/ui-core';
 import type { AuthSyncOptions } from '../types';
 import { DEFAULT_POLL_INTERVAL } from '../lib/constants';
-import { getSessionAction } from '../server/actions';
+
+// Dynamic import to avoid bundling server code
+const getSessionAction = async () => {
+  // Call the server action dynamically
+  const { getSessionAction: action } = await import('../server/actions');
+  return action();
+};
 
 /**
  * Hook to sync auth state between server and client

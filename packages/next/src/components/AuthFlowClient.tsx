@@ -7,7 +7,6 @@
 
 import { AuthFlow } from '@authsome/ui-react';
 import type { AuthFlowClientProps } from '../types';
-import { useAuthSync } from '../hooks/useAuthSync';
 
 /**
  * Auth Flow Client Component
@@ -46,11 +45,9 @@ export function AuthFlowClient({
   initialSession: _initialSession,
   searchParams: _searchParams,
 }: AuthFlowClientProps) {
-  // Enable auth sync
-  useAuthSync({
-    pollInterval: 60000,
-    enablePolling: true,
-  });
+  // Note: Session sync removed to avoid bundling server code in client bundle
+  // The AuthProvider from @authsome/ui-react handles its own state management
+  // Users can implement custom session sync if needed using fetch() API
 
   // Render the AuthFlow component from @authsome/ui-react
   // It will use the context provided by NextAuthProvider (which wraps AuthProvider)

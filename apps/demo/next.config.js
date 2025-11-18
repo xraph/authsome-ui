@@ -10,16 +10,6 @@ const nextConfig = {
     '@authsome/adapter-clerk',
     '@authsome/adapter-generic',
   ],
-  experimental: {
-    // Enable Tailwind CSS v4 support
-    turbo: {
-      rules: {
-        '*.css': {
-          loaders: ['@tailwindcss/vite'],
-        },
-      },
-    },
-  },
 };
 
 module.exports = nextConfig;

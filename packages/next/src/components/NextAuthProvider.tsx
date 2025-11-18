@@ -7,6 +7,7 @@
 
 import * as React from 'react';
 import { AuthProvider } from '@authsome/ui-react';
+import { predefinedFlows, FlowConfigType } from '@authsome/ui-core';
 import { createNextAuthClient } from '../lib/create-next-client';
 import type { NextAuthConfig } from '../types';
 
@@ -83,11 +84,19 @@ export function NextAuthProvider({ config, children }: NextAuthProviderProps) {
     [config.adapter]
   );
 
+  // Use the sign-in with MFA flow as default (supports both simple and MFA sign-in)
+  const defaultFlow = predefinedFlows[FlowConfigType.SIGN_IN_WITH_MFA];
+
   return (
     <AuthProvider
       client={nextClient}
+      flows={config.flows || defaultFlow}
+      initialFlowState={config.initialFlowState}
       uiComponents={config.uiComponents}
       rendererConfig={config.rendererConfig}
+      locale={config.locale}
+      onFlowStateChange={config.onFlowStateChange}
+      onOrganizationChange={config.onOrganizationChange}
     >
       {children}
     </AuthProvider>

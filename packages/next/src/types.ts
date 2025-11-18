@@ -6,8 +6,13 @@ import type {
   AuthProvider,
   User,
   Session,
-  AuthError,
+  FlowConfig,
+  FlowState,
+  AuthLocale,
+  DeepPartial,
+  Organization,
 } from '@authsome/ui-core';
+import { AuthError } from '@authsome/ui-core';
 import type { UIComponents, RendererConfig } from '@authsome/ui-react';
 
 /**
@@ -173,6 +178,31 @@ export interface NextAuthConfig {
    * Renderer configuration
    */
   rendererConfig?: RendererConfig;
+
+  /**
+   * Flow configuration (defaults to predefinedFlows)
+   */
+  flows?: FlowConfig;
+
+  /**
+   * Initial flow state
+   */
+  initialFlowState?: Partial<FlowState>;
+
+  /**
+   * Locale configuration for internationalization
+   */
+  locale?: DeepPartial<AuthLocale>;
+
+  /**
+   * Callback when flow state changes
+   */
+  onFlowStateChange?: (state: FlowState) => void;
+
+  /**
+   * Callback when organization changes
+   */
+  onOrganizationChange?: (org: Organization | null) => void;
 }
 
 /**

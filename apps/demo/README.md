@@ -1,111 +1,57 @@
-# AuthSome UI Demo Application
+# AuthSome UI Demo App
 
-Interactive demo application showcasing all features of AuthSome UI with **Tailwind CSS v4** and latest **shadcn/ui**.
+A comprehensive demonstration of AuthSome UI with Next.js App Router integration.
 
 ## Features
 
-- **Interactive Playground**: Try all components with live previews
-- **Example Pages**: Complete examples for each authentication flow
-- **Provider Switching**: Test different auth providers
-- **Dark Mode**: Built-in theme switching
-- **Code Examples**: View source code for each component
-- **Tailwind CSS v4**: Using the latest Tailwind CSS with CSS-based configuration
-- **Latest shadcn/ui**: Modern component library with Radix UI
+- 🔐 **Complete Auth Flows**: Sign in, sign up, OAuth, magic links, 2FA, passkeys
+- 🎨 **Beautiful UI**: Pre-styled components with shadcn/ui
+- 🚀 **Next.js App Router**: Server Components, Server Actions, and middleware
+- 🛡️ **Route Protection**: Automatic authentication via middleware
+- 🔒 **Secure Sessions**: Encrypted cookie-based sessions
+- 📱 **Responsive Design**: Mobile-first design with Tailwind CSS
 
-## Tech Stack
+## Quick Start
 
-- **Next.js 15** - App Router with React Server Components
-- **Tailwind CSS v4** - CSS-first configuration with `@theme` directive
-- **shadcn/ui** - Latest components with Radix UI primitives
-- **TypeScript 5.3** - Type-safe development
-- **lucide-react** - Modern icon library
-
-## Getting Started
-
-### Install Dependencies
+### 1. Install Dependencies
 
 ```bash
-cd apps/demo
+# From the root of the monorepo
+pnpm install
+
+# Or from this directory
 pnpm install
 ```
 
-### Environment Variables
-
-Create a `.env.local` file:
+### 2. Set Up Environment Variables
 
 ```bash
-# AuthSome Backend
-NEXT_PUBLIC_AUTHSOME_API_URL=http://localhost:8080/api/auth
+# Copy the example env file
+cp .env.local.example .env.local
 
-# Supabase (optional)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+# Generate a secure session secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
-# Generic API (optional)
-NEXT_PUBLIC_API_URL=http://localhost:8080
+# Edit .env.local and add:
+# - Your AUTHSOME_API_KEY from https://authsome.com
+# - The generated SESSION_SECRET (must be 64 hex characters / 32 bytes)
 ```
 
-### Run Development Server
+Your `.env.local` should look like:
+
+```env
+AUTHSOME_API_KEY=ask_live_1234567890abcdef
+SESSION_SECRET=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+NODE_ENV=development
+```
+
+### 3. Run Development Server
 
 ```bash
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Tailwind CSS v4 Features
-
-This demo uses Tailwind CSS v4 with the following modern features:
-
-### CSS-First Configuration
-
-Instead of a JavaScript config file, Tailwind v4 uses CSS:
-
-```css
-@import "tailwindcss";
-
-@theme {
-  --color-primary: 222.2 47.4% 11.2%;
-  --radius-lg: 0.5rem;
-}
-```
-
-### Benefits
-
-- **Faster builds**: Up to 10x faster than v3
-- **Better IntelliSense**: Native CSS with better editor support
-- **Smaller bundle**: Only includes what you use
-- **Type-safe**: CSS variables with autocomplete
-
-### Migration from v3
-
-The demo includes compatibility CSS variables to work with existing shadcn/ui components:
-
-```css
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  /* ... other variables */
-}
-```
-
-## Latest shadcn/ui Components
-
-The demo uses the latest shadcn/ui components with:
-
-- **Radix UI primitives** - Accessible component foundation
-- **Class Variance Authority** - Type-safe component variants
-- **tailwind-merge** - Intelligent class merging
-- **Latest component patterns** - Modern React patterns
-
-### Component Updates
-
-All shadcn/ui components are updated to work with Tailwind v4:
-
-- Button with CVA variants
-- Input with proper focus states
-- Card with modern layouts
-- Tabs with smooth animations
+Open [http://localhost:3000](http://localhost:3000) to see the demo.
 
 ## Project Structure
 
@@ -113,114 +59,219 @@ All shadcn/ui components are updated to work with Tailwind v4:
 apps/demo/
 ├── src/
 │   ├── app/
-│   │   ├── globals.css           # Tailwind v4 with @theme
-│   │   ├── layout.tsx            # Root layout
-│   │   ├── page.tsx              # Landing page
-│   │   ├── playground/
-│   │   │   └── page.tsx          # Interactive playground
-│   │   ├── examples/
-│   │   │   ├── page.tsx          # Examples overview
-│   │   │   ├── email-password/   # Email/password example
-│   │   │   ├── oauth/            # OAuth example
-│   │   │   └── ...               # Other examples
-│   │   └── dashboard/            # Protected dashboard
+│   │   ├── auth/
+│   │   │   ├── [...auth]/
+│   │   │   │   ├── page.tsx       # Catch-all auth route
+│   │   │   │   └── route.ts       # OAuth callback handler
+│   │   │   └── layout.tsx         # Auth pages layout
+│   │   ├── dashboard/
+│   │   │   ├── page.tsx           # Protected dashboard (Server Component)
+│   │   │   └── dashboard-client.tsx # Client-side dashboard UI
+│   │   ├── examples/              # Auth flow examples
+│   │   ├── api/
+│   │   │   └── auth/
+│   │   │       └── signout/
+│   │   │           └── route.ts   # Sign out API
+│   │   ├── layout.tsx             # Root layout with NextAuthProvider
+│   │   └── page.tsx               # Home page
 │   ├── lib/
-│   │   └── auth-client.ts        # Auth client configuration
-│   └── components/               # Demo-specific components
-├── next.config.js                # Next.js config with Tailwind v4
-└── package.json                  # Dependencies
+│   │   ├── auth-server.ts         # Server-side auth client
+│   │   └── auth-config.ts         # Client-side auth config
+│   └── components/
+│       └── ui/                    # shadcn/ui components
+├── middleware.ts                  # Route protection middleware
+├── .env.local.example            # Environment variables template
+└── package.json
 ```
 
-## Available Examples
+## Key Files Explained
 
-1. **Email/Password** - Traditional authentication
-2. **OAuth Providers** - Social login (Google, GitHub, etc.)
-3. **Magic Links** - Passwordless email authentication
-4. **Two-Factor Auth** - TOTP, SMS, and email 2FA
-5. **Phone Auth** - SMS verification
-6. **Username Auth** - Username-based authentication
-7. **Passkeys** - WebAuthn/FIDO2
+### Authentication Configuration
 
-## Build for Production
+#### `lib/auth-server.ts`
+Server-side auth client for use in Server Components, Server Actions, and API routes.
+
+```tsx
+import { authServer } from '@/lib/auth-server';
+
+// In a Server Component
+const user = await authServer.getUser();
+
+// In a Server Action
+await authServer.signOut();
+```
+
+#### `lib/auth-config.ts`
+Client-side auth configuration for use in React components and providers.
+
+```tsx
+import { authConfig } from '@/lib/auth-config';
+
+<NextAuthProvider config={authConfig}>
+  {children}
+</NextAuthProvider>
+```
+
+### Route Handlers
+
+#### `app/auth/[...auth]/page.tsx`
+Catch-all route that handles all authentication pages:
+- `/auth/signin` - Sign in page
+- `/auth/signup` - Sign up page
+- `/auth/forgot-password` - Password reset request
+- `/auth/callback` - OAuth callback handler
+
+#### `app/auth/[...auth]/route.ts`
+OAuth callback API route that:
+- Exchanges OAuth codes for tokens
+- Creates user sessions
+- Handles provider-specific logic
+
+### Middleware
+
+#### `middleware.ts`
+Protects routes based on authentication status:
+- Public routes: accessible to everyone
+- Auth routes: redirect to dashboard if logged in
+- Protected routes: require authentication
+
+## Available Routes
+
+### Public Routes
+- `/` - Home page
+- `/examples/*` - Auth flow examples
+- `/playground` - Interactive playground
+
+### Auth Routes
+- `/auth/signin` - Sign in page
+- `/auth/signup` - Sign up page
+- `/auth/forgot-password` - Request password reset
+- `/auth/reset-password` - Reset password with token
+- `/auth/callback` - OAuth callback handler
+
+### Protected Routes
+- `/dashboard` - User dashboard (requires authentication)
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHSOME_API_KEY` | Yes | Your AuthSome API key from the dashboard |
+| `SESSION_SECRET` | Yes | 64-character hex string (32 bytes) for session encryption |
+| `NODE_ENV` | No | Environment mode (development/production) |
+
+## Development
+
+### Type Checking
+
+```bash
+pnpm type-check
+```
+
+### Linting
+
+```bash
+pnpm lint
+```
+
+### Building
+
+```bash
+pnpm build
+```
+
+### Production
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-## Development Tips
+## Authentication Flows
 
-### Hot Reload
+### Email/Password
+1. User enters email and password
+2. Server validates credentials
+3. Session created and stored in encrypted cookie
+4. User redirected to dashboard
 
-Tailwind CSS v4 provides instant feedback on style changes without full page reloads.
+### OAuth (Google, GitHub, etc.)
+1. User clicks OAuth provider button
+2. Redirected to provider's consent screen
+3. Provider redirects to `/auth/callback` with code
+4. Server exchanges code for tokens
+5. Session created with user data
+6. User redirected to dashboard
 
-### CSS IntelliSense
+### Magic Link
+1. User enters email
+2. Server sends magic link to email
+3. User clicks link with token
+4. Server validates token
+5. Session created
+6. User redirected to dashboard
 
-VS Code users can install the Tailwind CSS IntelliSense extension for autocomplete on CSS variables.
+### Two-Factor Authentication
+1. User signs in with email/password
+2. Server prompts for 2FA code
+3. User enters code from authenticator app
+4. Server validates code
+5. Full session created
+6. User redirected to dashboard
 
-### Custom Themes
+## Security Features
 
-Modify the `@theme` block in `globals.css` to customize the design system:
-
-```css
-@theme {
-  --color-primary: 220 90% 56%;  /* Custom blue */
-  --radius-lg: 1rem;              /* Larger radius */
-}
-```
-
-### Dark Mode
-
-Toggle dark mode using the `class` strategy:
-
-```tsx
-<html className="dark">
-  {/* Dark mode active */}
-</html>
-```
-
-## Performance
-
-Tailwind CSS v4 optimizations:
-
-- **Build time**: 10x faster than v3
-- **Bundle size**: ~30% smaller
-- **Runtime**: Zero-cost abstractions
-- **Tree-shaking**: Automatic unused code elimination
-
-## Browser Support
-
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari 15+
-- Mobile browsers (iOS Safari, Chrome Mobile)
+- ✅ **Encrypted Sessions**: Using iron-session with AES-256-GCM
+- ✅ **HTTP-Only Cookies**: Session cookies not accessible to JavaScript
+- ✅ **CSRF Protection**: SameSite cookie policy
+- ✅ **Secure Cookies**: HTTPS-only in production
+- ✅ **Route Protection**: Middleware validates all requests
+- ✅ **Server-Side Validation**: Auth checks on every request
 
 ## Troubleshooting
 
-### Styles Not Loading
+### "Session password must be at least 32 characters"
 
-1. Ensure `@import "tailwindcss"` is at the top of `globals.css`
-2. Clear Next.js cache: `rm -rf .next`
-3. Restart dev server
-
-### CSS Variables Not Working
-
-Make sure CSS variables are defined in both `:root` and `.dark` selectors for dark mode support.
-
-### TypeScript Errors
-
-Run type checking:
+Generate a proper session secret:
 
 ```bash
-pnpm type-check
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-## Resources
+### OAuth callback not working
 
-- [Tailwind CSS v4 Docs](https://tailwindcss.com/docs/v4-beta)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [Next.js 15 Documentation](https://nextjs.org/docs)
-- [Radix UI Primitives](https://www.radix-ui.com)
+1. Verify callback URL in OAuth provider settings
+2. Check that both `page.tsx` and `route.ts` exist in `app/auth/[...auth]/`
+3. Ensure `SESSION_SECRET` is set
+4. Check browser console and server logs
+
+### Middleware redirecting incorrectly
+
+1. Verify public routes are configured correctly in `middleware.ts`
+2. Check that `SESSION_SECRET` matches across all config files
+3. Ensure middleware matcher excludes static assets
+
+### Build errors
+
+```bash
+# Clean build artifacts
+rm -rf .next
+rm -rf node_modules
+pnpm install
+pnpm build
+```
+
+## Learn More
+
+- [AuthSome UI Documentation](https://docs.authsome.com)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Next.js App Router](https://nextjs.org/docs/app)
+- [iron-session](https://github.com/vvo/iron-session)
+
+## Support
+
+- GitHub Issues: [https://github.com/xraph/authsome-ui/issues](https://github.com/xraph/authsome-ui/issues)
+- Documentation: [https://docs.authsome.com](https://docs.authsome.com)
 
 ## License
 
