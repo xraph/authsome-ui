@@ -27,7 +27,11 @@ export function PasskeyRenderer({
   rendererConfig,
 }: PasskeyRendererProps) {
   const { authenticatePasskey } = useAuth();
-  const { Button, Alert, icons } = uiComponents;
+  const { Button, Alert: AlertComponents, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const PasskeyIcon = icons?.passkey || icons?.key;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -68,8 +72,10 @@ export function PasskeyRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <div className="space-y-4">

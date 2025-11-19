@@ -27,7 +27,11 @@ export function MFARequiredRenderer({
   uiComponents: UIComponents;
   rendererConfig?: RendererConfig;
 }) {
-  const { Button, Alert, icons } = uiComponents;
+  const { Button, Alert: AlertComponents, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const ShieldIcon = icons?.shield;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -42,9 +46,11 @@ export function MFARequiredRenderer({
         </p>
       </div>
 
-      {Alert && (
+      {Alert && AlertDescription && (
         <Alert variant="info">
-          This extra step helps keep your account secure.
+          <AlertDescription>
+            This extra step helps keep your account secure.
+          </AlertDescription>
         </Alert>
       )}
 
@@ -121,7 +127,11 @@ export function MFAVerifyRenderer({
   rendererConfig,
 }: MFARendererProps) {
   const { verifyTwoFactor } = useAuth();
-  const { Input, Button, Alert, Field } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Field } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const locale = rendererConfig?.locale || defaultLocale;
 
   const [code, setCode] = useState('');
@@ -163,8 +173,10 @@ export function MFAVerifyRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

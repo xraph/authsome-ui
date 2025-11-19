@@ -27,7 +27,11 @@ export function MagicLinkRenderer({
   rendererConfig,
 }: MagicLinkRendererProps) {
   const { sendMagicLink } = useAuth();
-  const { Input, Button, Alert, Field, icons } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Field, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const MagicLinkIcon = icons?.magicLink || icons?.mail;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -61,7 +65,7 @@ export function MagicLinkRenderer({
         {MagicLinkIcon ? (
           <MagicLinkIcon className="mx-auto h-12 w-12 text-blue-600" />
         ) : (
-          <span className="text-6xl">✉️</span>
+          <span className="text-6xl" />
         )}
         <h2 className="mt-4 text-2xl font-bold tracking-tight">{locale.magicLink?.sendLink || 'Magic Link'}</h2>
         <p className="text-sm text-gray-600 mt-1">
@@ -69,8 +73,10 @@ export function MagicLinkRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +118,8 @@ export function MagicLinkSentRenderer({
   uiComponents: UIComponents;
   rendererConfig?: RendererConfig;
 }) {
-  const { Alert, icons } = uiComponents;
+  const { Alert: AlertComponents, icons } = uiComponents;
+  const { Alert, AlertDescription } = AlertComponents || {};
   const MagicLinkIcon = icons?.magicLink || icons?.mail;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -121,7 +128,7 @@ export function MagicLinkSentRenderer({
       {MagicLinkIcon ? (
         <MagicLinkIcon className="mx-auto h-16 w-16 text-blue-600" />
       ) : (
-        <span className="text-6xl">✉️</span>
+        <span className="text-6xl" />
       )}
       
       <div>
@@ -132,9 +139,11 @@ export function MagicLinkSentRenderer({
         <p className="font-semibold mt-1">{state.email}</p>
       </div>
 
-      {Alert && (
+      {Alert && AlertDescription && (
         <Alert variant="info">
-          Click the link in the email to sign in. The link will expire in 15 minutes.
+          <AlertDescription>
+            Click the link in the email to sign in. The link will expire in 15 minutes.
+          </AlertDescription>
         </Alert>
       )}
 

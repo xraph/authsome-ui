@@ -26,7 +26,10 @@ export function EmailPasswordRenderer({
 }: EmailPasswordRendererProps) {
   const auth = useAuth();
   const { signIn, signUp, adapter } = auth;
-  const { Input, Button, Alert, Field, Select, Checkbox, Textarea } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Field, Select, Checkbox, Textarea } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
 
   const [email, setEmail] = useState(state.email || '');
   const [password, setPassword] = useState('');
@@ -283,8 +286,10 @@ export function EmailPasswordRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

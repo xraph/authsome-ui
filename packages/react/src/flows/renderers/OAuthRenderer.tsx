@@ -185,7 +185,10 @@ export function OAuthRenderer({
   providers: providersProp,
 }: OAuthRendererProps) {
   const { oauthSignIn, getOAuthProviders } = useAuth();
-  const { Button, Divider, Alert, providerIcons } = uiComponents;
+  const { Button, Divider, Alert: AlertComponents, providerIcons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -281,12 +284,16 @@ export function OAuthRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {providers.length === 0 && !loading && Alert && (
-        <Alert variant="warning">{locale.errors?.generic || 'No providers configured'}</Alert>
+      {providers.length === 0 && !loading && Alert && AlertDescription && (
+        <Alert variant="warning">
+          <AlertDescription>{locale.errors?.generic || 'No providers configured'}</AlertDescription>
+        </Alert>
       )}
 
       <div className="space-y-3">
@@ -305,7 +312,6 @@ export function OAuthRenderer({
               className={`w-full space-x-4 ${config?.color || ''}`}
             >
               {ProviderIcon && <ProviderIcon className="size-5" />}
-              {!ProviderIcon && <span className="text-lg">{config?.icon || '🔐'}</span>}
               <span>{interpolate(rendererConfig?.labels?.continueWith || locale.auth?.continueWith || 'Continue with {provider}', { provider: displayName })}</span>
             </Button>
           );

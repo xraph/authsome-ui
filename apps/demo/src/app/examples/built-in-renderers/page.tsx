@@ -1,13 +1,13 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { AuthProvider, AuthFlow, type UIComponents, type RendererConfig, useAuth } from '@authsome/ui-react';
 import { AuthClient, getFlowConfig, FlowConfigType } from '@authsome/ui-core';
 import React, { useState, useEffect } from 'react';
-import { Alert } from '@/components/ui/alert';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -58,8 +58,22 @@ const uiComponents: UIComponents = {
     Item: SelectItem,
   },
   
-  // Alert component
-  Alert: Alert,
+  // Alert component (composite pattern)
+  Alert: {
+    Alert,
+    AlertTitle,
+    AlertDescription,
+  },
+  
+  // Card component (composite pattern)
+  Card: {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+    CardContent,
+    CardFooter,
+  },
   
   
   // Divider component
@@ -175,7 +189,7 @@ function FlowDemoWrapper({ children }: { children: React.ReactNode }) {
       signIn: 'Sign In',
       signUp: 'Sign Up',
       or: 'Or continue with',
-      continueWith: ' ',
+      continueWith: 'Continue with {provider}',
     },
   };
 

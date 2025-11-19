@@ -25,20 +25,27 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Card component props
+ * Shadcn-style composite Card components
+ * Supports shadcn/Radix UI pattern with separate subcomponents
  */
-export interface CardProps {
-  children: ReactNode;
-  className?: string;
+export interface CardComponents {
+  Card: ComponentType<any>;
+  CardHeader: ComponentType<any>;
+  CardTitle: ComponentType<any>;
+  CardDescription: ComponentType<any>;
+  CardAction?: ComponentType<any>;
+  CardContent: ComponentType<any>;
+  CardFooter: ComponentType<any>;
 }
 
 /**
- * Alert/Message component props
+ * Shadcn-style composite Alert components
+ * Supports shadcn/Radix UI pattern with separate subcomponents
  */
-export interface AlertProps {
-  variant?: 'default' | 'success' | 'error' | 'warning' | 'info';
-  children: ReactNode;
-  className?: string;
+export interface AlertComponents {
+  Alert: ComponentType<any>;
+  AlertTitle?: ComponentType<any>;
+  AlertDescription?: ComponentType<any>;
 }
 
 /**
@@ -155,9 +162,9 @@ export interface UIComponents {
   Button: ComponentType<ButtonProps>;
   Field: FieldComponents;
   
-  // Layout components
-  Card?: ComponentType<CardProps>;
-  Alert?: ComponentType<AlertProps>;
+  // Layout components (composite patterns)
+  Card?: CardComponents;
+  Alert?: AlertComponents;
   Divider?: ComponentType<DividerProps>;
   Link?: ComponentType<LinkProps>;
   Checkbox?: ComponentType<CheckboxProps>;

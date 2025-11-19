@@ -24,7 +24,8 @@ export function SuccessRenderer({
   onLogout,
 }: SuccessRendererProps) {
   const { signOut } = useAuth();
-  const { Button, Alert, icons } = uiComponents;
+  const { Button, Alert: AlertComponents, icons } = uiComponents;
+  const { Alert, AlertDescription } = AlertComponents || {};
   const SuccessIcon = icons?.success;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -63,9 +64,11 @@ export function SuccessRenderer({
         </p>
       </div>
 
-      {Alert && (
+      {Alert && AlertDescription && (
         <Alert variant="success">
-          {locale.success?.signedIn || 'Authentication successful. Your session is now active.'}
+          <AlertDescription>
+            {locale.success?.signedIn || 'Authentication successful. Your session is now active.'}
+          </AlertDescription>
         </Alert>
       )}
 

@@ -22,7 +22,11 @@ export function ErrorRenderer({
   onRetry,
   onBack,
 }: ErrorRendererProps) {
-  const { Button, Alert, icons } = uiComponents;
+  const { Button, Alert: AlertComponents, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const ErrorIcon = icons?.error;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -111,14 +115,16 @@ export function ErrorRenderer({
         <p className="text-gray-600 mt-2">{getErrorMessage(error)}</p>
       </div>
 
-      {Alert && (
+      {Alert && AlertDescription && (
         <Alert variant="error">
-          <div className="text-left">
-            <p className="font-medium">Error Code: {error.type}</p>
-            {error.code && (
-              <p className="text-sm mt-1">Reference: {error.code}</p>
-            )}
-          </div>
+          <AlertDescription>
+            <div className="text-left">
+              <p className="font-medium">Error Code: {error.type}</p>
+              {error.code && (
+                <p className="text-sm mt-1">Reference: {error.code}</p>
+              )}
+            </div>
+          </AlertDescription>
         </Alert>
       )}
 

@@ -27,7 +27,11 @@ export function PhoneAuthRenderer({
   rendererConfig,
 }: PhoneAuthRendererProps) {
   const { sendPhoneCode } = useAuth();
-  const { Input, Button, Alert, Field, icons } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Field, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const PhoneIcon = icons?.phone;
   const locale = rendererConfig?.locale || defaultLocale;
 
@@ -60,8 +64,10 @@ export function PhoneAuthRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,7 +119,11 @@ export function PhoneVerifyRenderer({
   rendererConfig,
 }: PhoneAuthRendererProps) {
   const { verifyPhoneCode } = useAuth();
-  const { Input, Button, Alert, Field } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Field } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
+  
   const locale = rendererConfig?.locale || defaultLocale;
 
   const [code, setCode] = useState('');
@@ -144,8 +154,10 @@ export function PhoneVerifyRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">

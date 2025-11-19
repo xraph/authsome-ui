@@ -33,7 +33,10 @@ export function UnifiedAuthRenderer({
 }: UnifiedAuthRendererProps) {
   const auth = useAuth();
   const { signIn, signUp, oauthSignIn, sendMagicLink, sendPhoneCode, authenticatePasskey, adapter } = auth;
-  const { Input, Button, Alert, Divider, Checkbox, Select, Textarea, Field, icons } = uiComponents;
+  const { Input, Button, Alert: AlertComponents, Divider, Checkbox, Select, Textarea, Field, icons } = uiComponents;
+  
+  // Destructure Alert composite components
+  const { Alert, AlertDescription } = AlertComponents || {};
 
   const [formData, setFormData] = useState<Record<string, any>>({
     email: state.email || '',
@@ -388,11 +391,7 @@ export function UnifiedAuthRenderer({
                 title={interpolate(labels.continueWith || locale.auth?.continueWith || 'Continue with {provider}', { provider: label })}
                 className="size-10"
               >
-                {ProviderIcon ? (
-                  <ProviderIcon className="size-5" />
-                ) : (
-                  <span className="text-lg">🔐</span>
-                )}
+                {ProviderIcon && <ProviderIcon className="size-5" />}
               </Button>
             );
           })}
@@ -416,7 +415,6 @@ export function UnifiedAuthRenderer({
               className="w-full"
             >
               {ProviderIcon && <ProviderIcon className="size-5" />}
-              {!ProviderIcon && <span className="text-lg">🔐</span>}
               <span>{interpolate(labels.continueWith || locale.auth?.continueWith || 'Continue with {provider}', { provider: label })}</span>
             </Button>
           );
@@ -661,8 +659,10 @@ export function UnifiedAuthRenderer({
           </p>
         </div>
 
-        {error && Alert && (
-          <Alert variant="error">{error}</Alert>
+        {error && Alert && AlertDescription && (
+          <Alert variant="error">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {/* OAuth buttons at top (if socialFirst) */}
@@ -749,8 +749,10 @@ export function UnifiedAuthRenderer({
           </p>
         </div>
 
-        {error && Alert && (
-          <Alert variant="error">{error}</Alert>
+        {error && Alert && AlertDescription && (
+          <Alert variant="error">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {/* Password form (if enabled) */}
@@ -809,9 +811,11 @@ export function UnifiedAuthRenderer({
             )}
             
             {magicLinkSent ? (
-              Alert && (
+              Alert && AlertDescription && (
                 <Alert variant="success">
-                  {labels.magicLinkSent || 'Magic link sent! Check your email.'}
+                  <AlertDescription>
+                    {labels.magicLinkSent || 'Magic link sent! Check your email.'}
+                  </AlertDescription>
                 </Alert>
               )
             ) : (
@@ -822,7 +826,6 @@ export function UnifiedAuthRenderer({
                 className="w-full"
               >
                 {icons?.magicLink && <icons.magicLink className="size-5" />}
-                {!icons?.magicLink && <span className="text-lg">✉️</span>}
                 <span>{labels.sendMagicLink || 'Send Magic Link'}</span>
               </Button>
             )}
@@ -846,8 +849,10 @@ export function UnifiedAuthRenderer({
         </p>
       </div>
 
-      {error && Alert && (
-        <Alert variant="error">{error}</Alert>
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* OAuth buttons at top (if socialFirst) */}
@@ -1026,9 +1031,11 @@ export function UnifiedAuthRenderer({
           )}
           
           {magicLinkSent ? (
-            Alert && (
+            Alert && AlertDescription && (
               <Alert variant="success">
-                {labels.magicLinkSent || 'Magic link sent! Check your email.'}
+                <AlertDescription>
+                  {labels.magicLinkSent || 'Magic link sent! Check your email.'}
+                </AlertDescription>
               </Alert>
             )
           ) : (
@@ -1053,7 +1060,6 @@ export function UnifiedAuthRenderer({
                 className="w-full"
               >
                 {icons?.magicLink && <icons.magicLink className="size-5" />}
-                {!icons?.magicLink && <span className="text-lg">✉️</span>}
                 <span>{labels.sendMagicLink || 'Send Magic Link'}</span>
               </Button>
             </form>

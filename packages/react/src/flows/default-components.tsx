@@ -8,8 +8,8 @@ import React from 'react';
 import type { 
   InputProps, 
   ButtonProps, 
-  CardProps, 
-  AlertProps, 
+  CardComponents,
+  AlertComponents, 
   DividerProps, 
   LinkProps,
   CheckboxProps,
@@ -73,14 +73,62 @@ export const DefaultButton: React.FC<ButtonProps> = ({
   );
 };
 
-export const DefaultCard: React.FC<CardProps> = ({ children, className }) => (
+// Default Card Components (composite pattern)
+const DefaultCardRoot: React.FC<any> = ({ children, className }) => (
   <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className || ''}`}>
     {children}
   </div>
 );
 
-export const DefaultAlert: React.FC<AlertProps> = ({ variant = 'default', children, className }) => {
-  const variantStyles = {
+const DefaultCardHeader: React.FC<any> = ({ children, className }) => (
+  <div className={`flex flex-col space-y-1.5 p-6 ${className || ''}`}>
+    {children}
+  </div>
+);
+
+const DefaultCardTitle: React.FC<any> = ({ children, className }) => (
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className || ''}`}>
+    {children}
+  </h3>
+);
+
+const DefaultCardDescription: React.FC<any> = ({ children, className }) => (
+  <p className={`text-sm text-gray-500 ${className || ''}`}>
+    {children}
+  </p>
+);
+
+const DefaultCardAction: React.FC<any> = ({ children, className }) => (
+  <div className={`flex items-center ${className || ''}`}>
+    {children}
+  </div>
+);
+
+const DefaultCardContent: React.FC<any> = ({ children, className }) => (
+  <div className={`p-6 pt-0 ${className || ''}`}>
+    {children}
+  </div>
+);
+
+const DefaultCardFooter: React.FC<any> = ({ children, className }) => (
+  <div className={`flex items-center p-6 pt-0 ${className || ''}`}>
+    {children}
+  </div>
+);
+
+export const DefaultCard: CardComponents = {
+  Card: DefaultCardRoot,
+  CardHeader: DefaultCardHeader,
+  CardTitle: DefaultCardTitle,
+  CardDescription: DefaultCardDescription,
+  CardAction: DefaultCardAction,
+  CardContent: DefaultCardContent,
+  CardFooter: DefaultCardFooter,
+};
+
+// Default Alert Components (composite pattern)
+const DefaultAlertRoot: React.FC<any> = ({ variant = 'default', children, className }) => {
+  const variantStyles: Record<string, string> = {
     default: 'bg-gray-50 border-gray-200 text-gray-800',
     success: 'bg-green-50 border-green-200 text-green-800',
     error: 'bg-red-50 border-red-200 text-red-800',
@@ -89,10 +137,28 @@ export const DefaultAlert: React.FC<AlertProps> = ({ variant = 'default', childr
   };
 
   return (
-    <div className={`p-4 border rounded-md ${variantStyles[variant]} ${className || ''}`}>
+    <div className={`relative w-full rounded-lg border p-4 ${variantStyles[variant] || variantStyles.default} ${className || ''}`}>
       {children}
     </div>
   );
+};
+
+const DefaultAlertTitle: React.FC<any> = ({ children, className }) => (
+  <h5 className={`mb-1 font-medium leading-none tracking-tight ${className || ''}`}>
+    {children}
+  </h5>
+);
+
+const DefaultAlertDescription: React.FC<any> = ({ children, className }) => (
+  <div className={`text-sm [&_p]:leading-relaxed ${className || ''}`}>
+    {children}
+  </div>
+);
+
+export const DefaultAlert: AlertComponents = {
+  Alert: DefaultAlertRoot,
+  AlertTitle: DefaultAlertTitle,
+  AlertDescription: DefaultAlertDescription,
 };
 
 export const DefaultDivider: React.FC<DividerProps> = ({ label, className }) => (
