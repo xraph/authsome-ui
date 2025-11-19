@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.4...adapter-authsome-v0.1.5) (2025-11-19)
+
+
+### Bug Fixes
+
+* update package.json files to use peerDependencies and clean up dependencies ([3b8c560](https://github.com/xraph/authsome-ui/commit/3b8c56029d17f2825316d1a42b12567362ec8c96))
+
 ## [0.1.4](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.3...adapter-authsome-v0.1.4) (2025-11-18)
 
 
