@@ -1,6 +1,6 @@
 {
   "name": "@authsome/adapter-clerk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Clerk adapter for AuthSome UI using Clerk SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
