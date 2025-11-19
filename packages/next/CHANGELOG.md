@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.6](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.5...ui-next-v0.1.6) (2025-11-19)
+
+
+### Bug Fixes
+
+* branch 'main' of github.com:xraph/authsome-ui ([a0a6e72](https://github.com/xraph/authsome-ui/commit/a0a6e72d6b87e5c7b4f9bf920e2277b964173542))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-react bumped to 0.1.6
+  * peerDependencies
+    * @authsome/ui-react bumped to 0.1.6
+
 ## [0.1.5](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.4...ui-next-v0.1.5) (2025-11-19)
 
 
