@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.3...ui-react-v0.1.4) (2025-11-19)
+
+
+### Features
+
+* enhance UI components with composite patterns for Card and Alert ([a500148](https://github.com/xraph/authsome-ui/commit/a5001488db1a97a43affc5d2076bb0ee814d8f44))
+
 ## [0.1.3](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.2...ui-react-v0.1.3) (2025-11-18)
 
 
