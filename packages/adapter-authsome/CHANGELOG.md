@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.5...adapter-authsome-v0.1.6) (2025-11-19)
+
+
+### Bug Fixes
+
+* branch 'main' of github.com:xraph/authsome-ui ([a0a6e72](https://github.com/xraph/authsome-ui/commit/a0a6e72d6b87e5c7b4f9bf920e2277b964173542))
+
 ## [0.1.5](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.4...adapter-authsome-v0.1.5) (2025-11-19)
 
 
