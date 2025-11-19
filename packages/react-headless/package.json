@@ -45,6 +45,8 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@authsome/ui-core": "workspace:*",
+    "@authsome/ui-react": "workspace:*",
     "@testing-library/react": "^14.2.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
