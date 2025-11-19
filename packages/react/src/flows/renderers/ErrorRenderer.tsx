@@ -134,12 +134,12 @@ export function ErrorRenderer({
 
       <div className="space-y-2">
         {onRetry && (
-          <Button onClick={onRetry} className="w-full">
+          <Button type="button" onClick={onRetry} className="w-full">
             {locale.common?.continue || 'Try Again'}
           </Button>
         )}
         {onBack && (
-          <Button onClick={onBack} variant="outline" className="w-full">
+          <Button type="button" onClick={onBack} variant="outline" className="w-full">
             {locale.common?.back || 'Go Back'}
           </Button>
         )}

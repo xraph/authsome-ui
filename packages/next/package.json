@@ -43,13 +43,13 @@
   "author": "AuthSome",
   "license": "MIT",
   "peerDependencies": {
+    "@authsome/ui-core": "workspace:*",
+    "@authsome/ui-react": "workspace:*",
     "next": "^14.0.0 || ^15.0.0 || ^16.0.0",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "@authsome/ui-core": "workspace:*",
-    "@authsome/ui-react": "workspace:*",
     "iron-session": "^8.0.3"
   },
   "devDependencies": {

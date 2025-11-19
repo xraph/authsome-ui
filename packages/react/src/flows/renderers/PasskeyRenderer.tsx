@@ -80,6 +80,7 @@ export function PasskeyRenderer({
 
       <div className="space-y-4">
         <Button
+          type="button"
           onClick={handleAuthenticate}
           loading={loading || isLoading}
           className="w-full"
@@ -89,6 +90,7 @@ export function PasskeyRenderer({
 
         {onBack && (
           <Button
+            type="button"
             onClick={onBack}
             variant="outline"
             disabled={loading || isLoading}

@@ -54,7 +54,7 @@ export function MFARequiredRenderer({
         </Alert>
       )}
 
-      <Button onClick={() => onNext()} className="w-full">
+      <Button type="button" onClick={() => onNext()} className="w-full">
         {locale.common?.continue || 'Continue to Verification'}
       </Button>
     </div>
@@ -94,6 +94,7 @@ export function MFASelectMethodRenderer({
           return (
             <Button
               key={method}
+              type="button"
               onClick={() => onNext({ metadata: { ...state.metadata, mfaMethod: method } })}
               variant="outline"
               disabled={isLoading}
@@ -110,7 +111,7 @@ export function MFASelectMethodRenderer({
       </div>
 
       {onBack && (
-        <Button onClick={onBack} variant="ghost" disabled={isLoading} className="w-full">
+        <Button type="button" onClick={onBack} variant="ghost" disabled={isLoading} className="w-full">
           {locale.common?.back || 'Back'}
         </Button>
       )}

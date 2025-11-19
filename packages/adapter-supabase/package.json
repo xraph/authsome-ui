@@ -23,12 +23,11 @@
     "test": "vitest",
     "test:watch": "vitest --watch"
   },
-  "dependencies": {
-    "@authsome/ui-core": "workspace:*",
-    "@supabase/supabase-js": "^2.39.8"
-  },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.0.0"
+    "@authsome/ui-core": "workspace:*"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.8"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

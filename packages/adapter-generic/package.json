@@ -23,9 +23,10 @@
     "test": "vitest",
     "test:watch": "vitest --watch"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@authsome/ui-core": "workspace:*"
   },
+  "dependencies": {},
   "devDependencies": {
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",

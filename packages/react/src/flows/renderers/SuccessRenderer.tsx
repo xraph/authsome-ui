@@ -100,6 +100,7 @@ export function SuccessRenderer({
 
       {onLogout && (
         <Button
+          type="button"
           onClick={handleLogout}
           variant="destructive"
           className="w-full"

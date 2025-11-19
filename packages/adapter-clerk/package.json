@@ -23,12 +23,11 @@
     "test": "vitest",
     "test:watch": "vitest --watch"
   },
-  "dependencies": {
-    "@authsome/ui-core": "workspace:*",
-    "@clerk/clerk-js": "^5.33.0"
-  },
   "peerDependencies": {
-    "@clerk/clerk-js": "^5.0.0"
+    "@authsome/ui-core": "workspace:*"
+  },
+  "dependencies": {
+    "@clerk/clerk-js": "^5.33.0"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

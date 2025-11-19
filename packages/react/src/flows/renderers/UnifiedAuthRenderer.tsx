@@ -384,6 +384,7 @@ export function UnifiedAuthRenderer({
             return (
               <Button
                 key={provider}
+                type="button"
                 onClick={() => handleOAuth(provider)}
                 variant="outline"
                 size="icon"
@@ -409,6 +410,7 @@ export function UnifiedAuthRenderer({
           return (
             <Button
               key={provider}
+              type="button"
               onClick={() => handleOAuth(provider)}
               variant="outline"
               disabled={loading || isLoading}
@@ -712,6 +714,7 @@ export function UnifiedAuthRenderer({
           <>
             {config.socialFirst && Divider && <Divider label={labels.or || 'or'} />}
             <Button
+              type="button"
               onClick={handlePasskey}
               variant="outline"
               disabled={loading || isLoading}
@@ -820,6 +823,7 @@ export function UnifiedAuthRenderer({
               )
             ) : (
               <Button
+                type="button"
                 onClick={handleMagicLink}
                 loading={loading || isLoading}
                 variant="outline"
@@ -1117,6 +1121,7 @@ export function UnifiedAuthRenderer({
             <Divider label={labels.or || 'or'} />
           )}
           <Button
+            type="button"
             onClick={handlePasskey}
             variant="outline"
             disabled={loading || isLoading}

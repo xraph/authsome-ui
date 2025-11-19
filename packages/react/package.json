@@ -37,12 +37,11 @@
     "directory": "packages/react"
   },
   "peerDependencies": {
+    "@authsome/ui-core": "workspace:*",
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },
-  "dependencies": {
-    "@authsome/ui-core": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@testing-library/react": "^14.2.1",
     "@testing-library/react-hooks": "^8.0.1",

@@ -305,6 +305,7 @@ export function OAuthRenderer({
           return (
             <Button
               key={provider}
+              type="button"
               onClick={() => handleOAuth(provider)}
               variant="outline"
               disabled={loading || isLoading}
@@ -322,6 +323,7 @@ export function OAuthRenderer({
         <>
           {Divider && <Divider label={locale.common?.or || 'or'} />}
           <Button
+            type="button"
             onClick={onBack}
             variant="ghost"
             disabled={loading || isLoading}
