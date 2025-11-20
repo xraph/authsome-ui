@@ -1,7 +1,7 @@
 {
   "name": "@authsome/adapter-authsome",
   "version": "0.1.7",
-  "description": "AuthSome adapter for AuthSome UI - will use official AuthSome JS client when released",
+  "description": "AuthSome adapter for AuthSome UI - uses official @authsome/client SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -26,7 +26,9 @@
   "peerDependencies": {
     "@authsome/ui-core": "workspace:*"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@authsome/client": "^0.0.1"
+  },
   "devDependencies": {
     "@authsome/ui-core": "workspace:*",
     "tsup": "^8.0.1",
@@ -48,4 +50,3 @@
     "directory": "packages/adapter-authsome"
   }
 }
-
