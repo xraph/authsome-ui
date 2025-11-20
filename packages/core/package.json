@@ -1,6 +1,6 @@
 {
   "name": "@authsome/ui-core",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Framework-agnostic authentication core for AuthSome UI",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
