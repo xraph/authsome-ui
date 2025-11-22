@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import type { MiddlewareConfig } from '../types';
+import type { MiddlewareConfig, SessionData } from '../types';
 import {
   isPublicRoute,
   isAuthRoute,
@@ -13,8 +13,21 @@ import {
   shouldProcessRequest,
   normalizePath,
 } from './matchers';
-import { getSessionData } from '../server/cookies';
+import { getSessionFromAdapter, getSessionFromRequest } from './edge-session';
 import { DEFAULT_BASE_PATH, DEFAULT_AUTH_ROUTES, ERROR_MESSAGES } from '../lib/constants';
+import { serializeCookie, CookieData } from '@authsome/ui-core';
+
+/**
+ * Apply cookies to a NextResponse
+ * @param response - Next.js response
+ * @param cookies - Cookies to set
+ */
+export function applyCookiesToResponse(response: NextResponse, cookies: CookieData[]): void {
+  for (const cookie of cookies) {
+    const serialized = serializeCookie(cookie);
+    response.headers.append('Set-Cookie', serialized);
+  }
+}
 
 /**
  * Create auth middleware
@@ -59,11 +72,6 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
       return NextResponse.next();
     }
 
-    // Skip auth routes (let the route handler deal with them)
-    if (isAuthRoute(pathname, basePath)) {
-      return NextResponse.next();
-    }
-
     // Check if route is public
     if (isPublicRoute(pathname, publicRoutes)) {
       return NextResponse.next();
@@ -72,19 +80,24 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
     // Custom auth check if provided
     if (config.requiresAuth) {
       const requiresAuth = await config.requiresAuth(pathname);
-      if (!requiresAuth) {
+      if (!requiresAuth || isAuthRoute(pathname, basePath)) {
         return NextResponse.next();
       }
     }
 
-    // Get session from cookie
+    // Get session from cookie (Edge Runtime compatible)
     let session;
     try {
-      const sessionData = await getSessionData(config.session);
+      const sessionData = await getSessionFromAdapter(config.adapter, request, config.session);
       session = sessionData;
     } catch (error) {
       console.error('Middleware session error:', error);
       session = null;
+    }
+
+    // Skip auth routes (let the route handler deal with them)
+    if (isAuthRoute(pathname, basePath) && !session) {
+      return NextResponse.next();
     }
 
     // Require authentication for protected routes
@@ -124,7 +137,7 @@ export function createAuthMiddlewareWithHandler(
   config: MiddlewareConfig,
   handler: (
     request: NextRequest,
-    session: any | null
+    session: SessionData | null
   ) => Promise<NextResponse> | NextResponse
 ) {
   if (!config.adapter) {
@@ -146,10 +159,10 @@ export function createAuthMiddlewareWithHandler(
       return NextResponse.next();
     }
 
-    // Get session
+    // Get session (Edge Runtime compatible)
     let sessionData;
     try {
-      sessionData = await getSessionData(config.session);
+      sessionData = await getSessionFromRequest(request, config.session);
     } catch (error) {
       console.error('Middleware session error:', error);
       sessionData = null;
@@ -170,4 +183,8 @@ export {
   shouldProcessRequest,
   normalizePath,
 } from './matchers';
+
+export {
+  getSessionFromAdapter,
+} from './edge-session';
 

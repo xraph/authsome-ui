@@ -29,6 +29,30 @@ export function SuccessRenderer({
   const SuccessIcon = icons?.success;
   const locale = rendererConfig?.locale || defaultLocale;
 
+  // Defensive check: if user or session is missing, log error and show minimal success message
+  if (!user || !session) {
+    console.error('[SuccessRenderer] Rendered without valid user or session data');
+    return (
+      <div className="space-y-6 text-center py-6">
+        {SuccessIcon ? (
+          <SuccessIcon className="mx-auto h-20 w-20 text-green-500" />
+        ) : (
+          <div className="mx-auto h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
+            <span className="text-4xl">✓</span>
+          </div>
+        )}
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {locale.success?.signedIn || 'Welcome Back!'}
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Authentication successful
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const handleLogout = async () => {
     if (!signOut) {
       console.error('Sign out is not available');

@@ -25,7 +25,7 @@ const serverConfig = {
   // Session config must match what's in auth-server.ts
   session: {
     password: process.env.SESSION_SECRET!,
-    cookieName: 'authsome.session',
+    cookieName: 'authsome_session',
     maxAge: 2592000, // 30 days
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,

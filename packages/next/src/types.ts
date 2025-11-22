@@ -40,6 +40,20 @@ export interface SessionConfig {
   cookieName?: string;
 
   /**
+   * Cookie name for adapter session storage
+   * @default 'authsome_session'
+   * 
+   * This is the cookie name used by the adapter to store the session data.
+   * It is different from the cookie name used by the middleware to store the session data.
+   * The adapter cookie name is used to store the session data in the database.
+   * The middleware cookie name is used to store the session data in the cookie.
+   * 
+   * The adapter cookie name is used to store the session data in the database.
+   * The middleware cookie name is used to store the session data in the cookie.
+   */
+  adapterCookieName?: string;
+
+  /**
    * Session max age in seconds
    * @default 2592000 (30 days)
    */
@@ -310,12 +324,9 @@ export interface ProtectedRouteProps {
 
 /**
  * Session data stored in cookie
+ * Re-exported from @authsome/ui-core for convenience
  */
-export interface SessionData {
-  user: User;
-  session: Session;
-  expiresAt: number;
-}
+export type { SessionData } from '@authsome/ui-core';
 
 /**
  * OAuth callback query params

@@ -10,6 +10,7 @@ import type {
   AuthProvider,
   User,
   Session,
+  SessionData,
   AuthResponse,
   SignInRequest,
   SignUpRequest,
@@ -33,6 +34,8 @@ import type {
   TwoFactorMethod,
   ProviderConfig,
   FieldDefinition,
+  RequestContext,
+  CookieData,
 } from '@authsome/ui-core';
 
 /**
@@ -98,6 +101,10 @@ export class GenericAdapter implements AuthProvider {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
   private initialized = false;
+
+  // Edge runtime context support
+  private context: RequestContext | null = null;
+  private cookies: CookieData[] = [];
 
   async initialize(config: ProviderConfig): Promise<void> {
     this.config = config as GenericAdapterConfig;
@@ -168,6 +175,21 @@ export class GenericAdapter implements AuthProvider {
       ...(options.headers as Record<string, string>),
     };
 
+    // Add context headers if available
+    if (this.context?.headers) {
+      Object.assign(headers, this.context.headers);
+    }
+
+    // Add context cookies as Cookie header if available
+    if (this.context?.cookies) {
+      const cookieString = Object.entries(this.context.cookies)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('; ');
+      if (cookieString) {
+        headers['Cookie'] = cookieString;
+      }
+    }
+
     if (this.accessToken) {
       headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
@@ -178,6 +200,12 @@ export class GenericAdapter implements AuthProvider {
         headers,
       });
 
+      // Extract Set-Cookie headers from response
+      const setCookieHeaders = response.headers.get('set-cookie');
+      if (setCookieHeaders) {
+        this.extractCookiesFromSetCookieHeader(setCookieHeaders);
+      }
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: response.statusText }));
         throw this.normalizeError(error);
@@ -187,6 +215,42 @@ export class GenericAdapter implements AuthProvider {
     } catch (error) {
       throw this.normalizeError(error);
     }
+  }
+
+  /**
+   * Extract cookies from Set-Cookie header
+   */
+  private extractCookiesFromSetCookieHeader(setCookieHeader: string): void {
+    // Simple parsing - in production you'd want a more robust parser
+    const parts = setCookieHeader.split(';').map(p => p.trim());
+    if (parts.length === 0) return;
+
+    const [nameValue] = parts;
+    const [name, value] = nameValue.split('=');
+    if (!name || value === undefined) return;
+
+    const cookieData: CookieData = { name, value };
+
+    // Parse options
+    const options: CookieData['options'] = {};
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i].toLowerCase();
+      if (part === 'httponly') options.httpOnly = true;
+      else if (part === 'secure') options.secure = true;
+      else if (part.startsWith('path=')) options.path = part.substring(5);
+      else if (part.startsWith('domain=')) options.domain = part.substring(7);
+      else if (part.startsWith('max-age=')) options.maxAge = parseInt(part.substring(8), 10);
+      else if (part.startsWith('samesite=')) {
+        const sameSite = part.substring(9) as 'strict' | 'lax' | 'none';
+        options.sameSite = sameSite;
+      }
+    }
+
+    if (Object.keys(options).length > 0) {
+      cookieData.options = options;
+    }
+
+    this.cookies.push(cookieData);
   }
 
   async signIn(request: SignInRequest): Promise<AuthResponse> {
@@ -252,6 +316,30 @@ export class GenericAdapter implements AuthProvider {
       userId: user.id,
       token: this.accessToken,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+  }
+
+  async getCurrentSessionData(): Promise<SessionData | null> {
+    if (!this.accessToken) {
+      return null;
+    }
+
+    const user = await this.getCurrentUser();
+    if (!user) {
+      return null;
+    }
+
+    const session: Session = {
+      id: this.accessToken.substring(0, 16), // Use token prefix as session ID
+      userId: user.id,
+      token: this.accessToken,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    };
+
+    return {
+      user,
+      session,
+      expiresAt: session.expiresAt!.getTime(),
     };
   }
 
@@ -507,5 +595,20 @@ export class GenericAdapter implements AuthProvider {
     return new AuthError(message, type, {
       originalError: error,
     });
+  }
+
+  // Edge runtime context methods
+  setContext(context: RequestContext): void {
+    this.context = context;
+    this.cookies = []; // Reset cookies when context changes
+  }
+
+  getCookies(): CookieData[] {
+    return [...this.cookies]; // Return copy to prevent external modifications
+  }
+
+  clearContext(): void {
+    this.context = null;
+    this.cookies = [];
   }
 }

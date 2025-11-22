@@ -49,6 +49,16 @@ export interface Session {
 }
 
 /**
+ * Session data with user and session combined
+ * Used for efficient retrieval of both user and session in one call
+ */
+export interface SessionData {
+  user: User;
+  session: Session;
+  expiresAt: number;
+}
+
+/**
  * Auth error types
  */
 export enum AuthErrorType {

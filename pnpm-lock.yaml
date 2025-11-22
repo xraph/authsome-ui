@@ -164,6 +164,10 @@ importers:
         version: 5.9.3
 
   packages/adapter-authsome:
+    dependencies:
+      '@authsome/client':
+        specifier: ^0.0.3
+        version: 0.0.3
     devDependencies:
       '@authsome/ui-core':
         specifier: workspace:*
@@ -415,6 +419,10 @@ packages:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
     dev: true
+
+  /@authsome/client@0.0.3:
+    resolution: {integrity: sha512-WzDEIG1wTaTp4f4yCBzhYAIZlEoF0wiyYPn0lds06p8z6JcPzUS/yuDXiqA7xZYzWOLLy0Kgb70k1vA1RGtahA==}
+    dev: false
 
   /@babel/code-frame@7.27.1:
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}

@@ -601,7 +601,7 @@ export class AuthClient {
     });
   }
 
-  private handleError(error: unknown): void {
+  private handleError(error: unknown): never {
     const authError = this.provider.normalizeError(error);
     const currentState = this.state.getValue();
 
@@ -611,6 +611,9 @@ export class AuthClient {
       error: authError,
       isLoading: false,
     });
+
+    // Re-throw the error so callers can handle it
+    throw authError;
   }
 
   private startAutoRefresh(): void {

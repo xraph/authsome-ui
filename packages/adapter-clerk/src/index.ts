@@ -8,8 +8,11 @@ import type {
   AuthProvider,
   User,
   Session,
+  SessionData,
   AuthResponse,
   OAuthProvider,
+  RequestContext,
+  CookieData,
 } from '@authsome/ui-core';
 import { AuthError } from '@authsome/ui-core';
 
@@ -25,6 +28,9 @@ export class ClerkAdapter implements AuthProvider {
   private clerk: Clerk | null = null;
   private config: ClerkAdapterConfig;
   private initPromise: Promise<void> | null = null;
+
+  // Edge runtime context support (Clerk manages its own cookies)
+  private context: RequestContext | null = null;
 
   constructor(config: ClerkAdapterConfig) {
     this.config = config;
@@ -188,6 +194,31 @@ export class ClerkAdapter implements AuthProvider {
     try {
       const session = clerk.session;
       return session ? this.transformSession(session) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async getCurrentSessionData(): Promise<SessionData | null> {
+    const clerk = this.ensureInitialized();
+
+    try {
+      const clerkSession = clerk.session;
+      if (!clerkSession) {
+        return null;
+      }
+
+      const user = this.transformUser(clerkSession.user);
+      const session = this.transformSession(clerkSession);
+      
+      // Extract expiresAt timestamp from Clerk session
+      const expiresAt = new Date(clerkSession.expireAt).getTime();
+
+      return {
+        user,
+        session,
+        expiresAt,
+      };
     } catch (error) {
       return null;
     }
@@ -558,6 +589,21 @@ export class ClerkAdapter implements AuthProvider {
       console.error('[ClerkAdapter] Failed to get organization memberships:', error);
       return [];
     }
+  }
+
+  // Edge runtime context methods
+  // Note: Clerk manages its own cookies through its SDK
+  setContext(context: RequestContext): void {
+    this.context = context;
+  }
+
+  getCookies(): CookieData[] {
+    // Clerk manages its own cookies, so we return an empty array
+    return [];
+  }
+
+  clearContext(): void {
+    this.context = null;
   }
 }
 

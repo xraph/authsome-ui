@@ -8,8 +8,11 @@ import type {
   AuthProvider,
   User,
   Session,
+  SessionData,
   AuthResponse,
   OAuthProvider,
+  RequestContext,
+  CookieData,
 } from '@authsome/ui-core';
 import { AuthError } from '@authsome/ui-core';
 
@@ -28,6 +31,9 @@ export interface SupabaseAdapterConfig {
 export class SupabaseAdapter implements AuthProvider {
   private client: SupabaseClient;
   private config: SupabaseAdapterConfig;
+
+  // Edge runtime context support
+  private context: RequestContext | null = null;
 
   constructor(config: SupabaseAdapterConfig) {
     this.config = config;
@@ -169,6 +175,34 @@ export class SupabaseAdapter implements AuthProvider {
       const { data, error } = await this.client.auth.getSession();
       if (error) this.handleError(error);
       return data.session ? this.transformSession(data.session) : null;
+    } catch (error) {
+      if (error instanceof AuthError) throw error;
+      this.handleError(error as Error);
+    }
+  }
+
+  async getCurrentSessionData(): Promise<SessionData | null> {
+    try {
+      const { data, error } = await this.client.auth.getSession();
+      if (error) this.handleError(error);
+      
+      if (!data.session || !data.session.user) {
+        return null;
+      }
+
+      const user = this.transformUser(data.session.user);
+      const session = this.transformSession(data.session);
+      
+      // Calculate expiresAt timestamp from Supabase session
+      const expiresAt = data.session.expires_at 
+        ? data.session.expires_at * 1000 
+        : Date.now() + 24 * 60 * 60 * 1000; // Default to 24 hours if not set
+
+      return {
+        user,
+        session,
+        expiresAt,
+      };
     } catch (error) {
       if (error instanceof AuthError) throw error;
       this.handleError(error as Error);
@@ -403,6 +437,21 @@ export class SupabaseAdapter implements AuthProvider {
 
   async signUpWithUsername(): Promise<AuthResponse> {
     throw new AuthError('Username auth not natively supported by Supabase', 'FEATURE_NOT_SUPPORTED');
+  }
+
+  // Edge runtime context methods
+  // Note: Supabase manages its own cookies through its SDK
+  setContext(context: RequestContext): void {
+    this.context = context;
+  }
+
+  getCookies(): CookieData[] {
+    // Supabase manages its own cookies, so we return an empty array
+    return [];
+  }
+
+  clearContext(): void {
+    this.context = null;
   }
 }
 

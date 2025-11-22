@@ -5,6 +5,7 @@
 import type {
   User,
   Session,
+  SessionData,
   AuthError,
   OAuthProvider,
   TwoFactorMethod,
@@ -216,6 +217,36 @@ export interface ProviderConfig {
 }
 
 /**
+ * Generic request context (framework-agnostic)
+ * Used to pass request information to adapters in edge runtime environments
+ */
+export interface RequestContext {
+  headers?: Record<string, string>;
+  cookies?: Record<string, string>;
+  url?: string;
+  method?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Cookie data to be set by the framework
+ * Adapters return this data; the framework is responsible for setting cookies
+ */
+export interface CookieData {
+  name: string;
+  value: string;
+  options?: {
+    path?: string;
+    domain?: string;
+    secure?: boolean;
+    httpOnly?: boolean;
+    sameSite?: 'strict' | 'lax' | 'none';
+    maxAge?: number;
+    expires?: Date;
+  };
+}
+
+/**
  * Auth provider interface
  * 
  * This interface defines the contract that all auth providers must implement.
@@ -256,6 +287,12 @@ export interface AuthProvider {
    * Get current session
    */
   getCurrentSession(): Promise<Session | null>;
+
+  /**
+   * Get current session data (user + session combined)
+   * More efficient than calling getCurrentUser() and getCurrentSession() separately
+   */
+  getCurrentSessionData(): Promise<SessionData | null>;
 
   /**
    * Refresh session
@@ -398,5 +435,24 @@ export interface AuthProvider {
    * Optional - only available if adapter supports dynamic signup fields
    */
   getSignupFields?(): Promise<FieldDefinition[]>;
+
+  // Edge runtime context methods (optional)
+  /**
+   * Set request context for subsequent adapter calls
+   * Optional - only needed for edge runtime environments
+   */
+  setContext?(context: RequestContext): void;
+
+  /**
+   * Get cookies that should be set by the framework
+   * Optional - only needed for edge runtime environments
+   */
+  getCookies?(): CookieData[];
+
+  /**
+   * Clear request context
+   * Optional - only needed for edge runtime environments
+   */
+  clearContext?(): void;
 }
 

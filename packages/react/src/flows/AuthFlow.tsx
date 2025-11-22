@@ -86,6 +86,21 @@ export function AuthFlow({
 
   // Show success component (custom takes priority over built-in)
   if (currentStep === FlowStep.SUCCESS) {
+    // Verify we have valid user and session data
+    if (!state.user || !state.session) {
+      console.error('[AuthFlow] SUCCESS step reached without user/session data');
+      console.error('[AuthFlow] Current state:', state);
+      // Transition to error state
+      const ErrorRenderer = ErrorComponent || allRenderers[FlowStep.ERROR];
+      if (ErrorRenderer) {
+        const error = state.error || {
+          message: 'Authentication succeeded but user data is missing',
+          type: 'UNKNOWN_ERROR' as const,
+        };
+        return <ErrorRenderer error={error} />;
+      }
+    }
+    
     const SuccessRenderer = SuccessComponent || allRenderers[FlowStep.SUCCESS];
     if (SuccessRenderer) {
       return <SuccessRenderer user={state.user} session={state.session} />;

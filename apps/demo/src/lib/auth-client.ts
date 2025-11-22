@@ -30,9 +30,23 @@ export async function createAuthClient(provider: ProviderType = 'authsome'): Pro
 
     switch (provider) {
       case 'authsome':
+        // Parse enabled plugins
+        const pluginsEnv = process.env.NEXT_PUBLIC_AUTHSOME_PLUGINS || '';
+        const plugins = pluginsEnv ? pluginsEnv.split(',').map(p => p.trim()).filter(Boolean) : ['social', 'passkey', 'magiclink', 'twofa', 'phone', 'mfa'];
+        
+        // Get auth mode
+        const authModeEnv = process.env.NEXT_PUBLIC_AUTHSOME_AUTH_MODE;
+        const authMode = (authModeEnv === 'cookies' || authModeEnv === 'apiKey') ? authModeEnv : 'bearer';
+        
         adapter = new AuthSomeAdapter();
         await adapter.initialize({
-          apiUrl: process.env.NEXT_PUBLIC_AUTHSOME_API_URL || 'http://localhost:8080/api/auth',
+          apiUrl: process.env.NEXT_PUBLIC_AUTHSOME_API_URL || 'http://localhost:8080/api',
+          basePath: process.env.NEXT_PUBLIC_AUTHSOME_BASE_PATH || '/api/identity',
+          authMode,
+          plugins,
+          publishableKey: process.env.NEXT_PUBLIC_AUTHSOME_PUBLISHABLE_KEY,
+          secretKey: process.env.AUTHSOME_SECRET_KEY,
+          timeout: parseInt(process.env.NEXT_PUBLIC_AUTHSOME_TIMEOUT || '30000', 10),
         });
         break;
 

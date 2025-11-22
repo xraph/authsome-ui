@@ -218,27 +218,7 @@ export function AuthProvider({
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganization, setActiveOrganization] = useState<Organization | null>(null);
 
-  useEffect(() => {
-    // Initialize client
-    client.initialize();
-
-    // Subscribe to auth state changes
-    const unsubscribe = client.subscribe((state) => {
-      setAuthState(state);
-      
-      // Load organizations when user logs in
-      if (state.isAuthenticated && client.supportsOrganizations()) {
-        loadOrganizations();
-      }
-    });
-
-    // Cleanup on unmount
-    return () => {
-      unsubscribe();
-    };
-  }, [client]);
-
-  // Load organizations
+  // Load organizations function - defined before useEffect to avoid hoisting issues
   const loadOrganizations = useCallback(async () => {
     try {
       if (client.supportsOrganizations()) {
@@ -256,6 +236,43 @@ export function AuthProvider({
       console.error('[AuthSome UI] Failed to load organizations:', error);
     }
   }, [client, onOrganizationChange]);
+
+  useEffect(() => {
+    // Initialize client
+    client.initialize();
+
+    // Subscribe to auth state changes
+    const unsubscribe = client.subscribe((state) => {
+      setAuthState(state);
+      
+      // Sync flow state with auth state (user/session) when auth state changes
+      // This ensures flow state stays updated even if renderers don't explicitly pass user/session
+      setFlowState(prev => {
+        if (!prev) return prev;
+        
+        // Only update if we have new user/session data
+        if (state.user || state.session) {
+          return {
+            ...prev,
+            user: state.user ?? prev.user,
+            session: state.session ?? prev.session,
+          };
+        }
+        
+        return prev;
+      });
+      
+      // Load organizations when user logs in
+      if (state.isAuthenticated && client.supportsOrganizations()) {
+        loadOrganizations();
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, [client, loadOrganizations]);
 
   // Flow dispatch
   const dispatch = useCallback(async (event: FlowEvent) => {
@@ -276,8 +293,16 @@ export function AuthProvider({
 
   // Convenience flow methods
   const nextFlow = useCallback((data?: Partial<FlowState>) => {
-    return dispatch({ action: FlowAction.NEXT, data });
-  }, [dispatch]);
+    // Automatically merge auth client state (user/session) into flow state
+    // Get current state directly from client's observable to avoid React state staleness
+    const currentAuthState = client.state.getValue();
+    const syncedData = {
+      ...data,
+      user: currentAuthState.user ?? data?.user,
+      session: currentAuthState.session ?? data?.session,
+    };
+    return dispatch({ action: FlowAction.NEXT, data: syncedData });
+  }, [dispatch, client]);
 
   const backFlow = useCallback(() => {
     return dispatch({ action: FlowAction.BACK });

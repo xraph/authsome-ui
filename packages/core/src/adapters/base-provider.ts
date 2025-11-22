@@ -24,11 +24,14 @@ import type {
   PasskeyAuthRequest,
   User,
   Session,
+  SessionData,
   OAuthProvider,
   TwoFactorMethod,
   PasskeyCredential,
   AuthError,
   ProviderConfig,
+  RequestContext,
+  CookieData,
 } from '../types';
 import { toAuthError } from '../utils';
 
@@ -88,6 +91,7 @@ export abstract class BaseAuthProvider implements AuthProvider {
   abstract signOut(): Promise<void>;
   abstract getCurrentUser(): Promise<User | null>;
   abstract getCurrentSession(): Promise<Session | null>;
+  abstract getCurrentSessionData(): Promise<SessionData | null>;
   abstract refreshSession(): Promise<Session>;
   abstract updateUser(request: UpdateUserRequest): Promise<User>;
   abstract changePassword(request: PasswordChangeRequest): Promise<void>;
@@ -108,6 +112,14 @@ export abstract class BaseAuthProvider implements AuthProvider {
   abstract authenticatePasskey(request: PasskeyAuthRequest): Promise<AuthResponse>;
   abstract listPasskeys(): Promise<PasskeyCredential[]>;
   abstract deletePasskey(credentialId: string): Promise<void>;
+
+  /**
+   * Optional edge runtime context methods
+   * Default implementations do nothing - subclasses can override
+   */
+  setContext?(context: RequestContext): void;
+  getCookies?(): CookieData[];
+  clearContext?(): void;
 
   /**
    * Normalize error to AuthError
