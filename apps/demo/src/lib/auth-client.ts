@@ -29,7 +29,7 @@ export async function createAuthClient(provider: ProviderType = 'authsome'): Pro
     let adapter;
 
     switch (provider) {
-      case 'authsome':
+      case 'authsome': {
         // Parse enabled plugins
         const pluginsEnv = process.env.NEXT_PUBLIC_AUTHSOME_PLUGINS || '';
         const plugins = pluginsEnv ? pluginsEnv.split(',').map(p => p.trim()).filter(Boolean) : ['social', 'passkey', 'magiclink', 'twofa', 'phone', 'mfa'];
@@ -49,16 +49,18 @@ export async function createAuthClient(provider: ProviderType = 'authsome'): Pro
           timeout: parseInt(process.env.NEXT_PUBLIC_AUTHSOME_TIMEOUT || '30000', 10),
         });
         break;
+      }
 
-      case 'supabase':
+      case 'supabase': {
         adapter = new SupabaseAdapter({
           url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
           anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
         });
         await adapter.initialize();
         break;
+      }
 
-      case 'generic':
+      case 'generic': {
         adapter = new GenericAdapter({
           baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
           endpoints: {
@@ -71,6 +73,7 @@ export async function createAuthClient(provider: ProviderType = 'authsome'): Pro
         });
         await adapter.initialize();
         break;
+      }
 
       default:
         throw new Error(`Unknown provider: ${provider}`);
