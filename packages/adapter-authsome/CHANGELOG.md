@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.8](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.7...adapter-authsome-v0.1.8) (2025-11-23)
+
+
+### Features
+
+* implement authentication middleware and update adapter configuration ([f222b89](https://github.com/xraph/authsome-ui/commit/f222b894ec09b86d8f572a32c6758c7ac86bda98))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.4
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.4
+
 ## [0.1.7](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.6...adapter-authsome-v0.1.7) (2025-11-23)
 
 

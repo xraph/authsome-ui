@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.9](https://github.com/xraph/authsome-ui/compare/ui-react-headless-v0.1.8...ui-react-headless-v0.1.9) (2025-11-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.4
+    * @authsome/ui-react bumped to 0.1.8
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.4
+    * @authsome/ui-react bumped to 0.1.8
+
 ## [0.1.8](https://github.com/xraph/authsome-ui/compare/ui-react-headless-v0.1.6...ui-react-headless-v0.1.8) (2025-11-23)
 
 
