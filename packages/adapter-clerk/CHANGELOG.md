@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.6](https://github.com/xraph/authsome-ui/compare/adapter-clerk-v0.1.5...adapter-clerk-v0.1.6) (2025-11-23)
+
+
+### Features
+
+* implement authentication middleware and update adapter configuration ([f222b89](https://github.com/xraph/authsome-ui/commit/f222b894ec09b86d8f572a32c6758c7ac86bda98))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.3
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.3
+
 ## [0.1.5](https://github.com/xraph/authsome-ui/compare/adapter-clerk-v0.1.4...adapter-clerk-v0.1.5) (2025-11-19)
 
 
