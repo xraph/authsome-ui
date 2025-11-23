@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.7](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.6...ui-next-v0.1.7) (2025-11-23)
+
+
+### Features
+
+* implement authentication middleware and update adapter configuration ([f222b89](https://github.com/xraph/authsome-ui/commit/f222b894ec09b86d8f572a32c6758c7ac86bda98))
+
+
+### Bug Fixes
+
+* update session handling in authMiddleware ([33ab4fa](https://github.com/xraph/authsome-ui/commit/33ab4fa33932ed4de06a4dbe7e2afedfaa78bed5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.3
+    * @authsome/ui-react bumped to 0.1.7
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.3
+    * @authsome/ui-react bumped to 0.1.7
+
 ## [0.1.6](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.5...ui-next-v0.1.6) (2025-11-19)
 
 
