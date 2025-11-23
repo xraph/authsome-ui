@@ -95,13 +95,15 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
       session = null;
     }
 
+    console.log('session ===> ', session);
+
     // Skip auth routes (let the route handler deal with them)
-    if (isAuthRoute(pathname, basePath) && !session) {
+    if (isAuthRoute(pathname, basePath) && !session?.sessionData) {
       return NextResponse.next();
     }
 
     // Require authentication for protected routes
-    if (!session) {
+    if (!session?.sessionData) {
       // User not authenticated, redirect to sign in
       const signInUrl = config.pages?.signIn || `${basePath}/signin`;
       const redirectUrl = new URL(signInUrl, request.url);
