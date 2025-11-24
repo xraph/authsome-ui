@@ -18,10 +18,13 @@ import { AuthFlowClient } from '@authsome/ui-next';
 import { getAuthPageProps, createAuthMetadata } from '@authsome/ui-next/server';
 import { redirect } from 'next/navigation';
 import { authConfig } from '@/lib/auth-config';
+import { authServer } from '@/lib/auth-server';
 
 // Server-side config for session management
+// Use the initialized adapter from auth-server
 const serverConfig = {
   ...authConfig,
+  adapter: authServer.adapter, // Use initialized adapter from auth-server
   // Session config must match what's in auth-server.ts
   session: {
     password: process.env.SESSION_SECRET!,
@@ -62,15 +65,5 @@ export default async function AuthPage(props: AuthPageProps) {
  * - /auth/signup -> "Sign Up"
  * - etc.
  */
-export const generateMetadata = createAuthMetadata({
-  siteName: 'AuthSome UI Demo',
-  titles: {
-    signin: 'Sign In',
-    signup: 'Sign Up',
-    'forgot-password': 'Forgot Password',
-    'reset-password': 'Reset Password',
-    'verify-email': 'Verify Email',
-    callback: 'Completing Sign In...',
-  },
-});
+export const generateMetadata = createAuthMetadata();
 

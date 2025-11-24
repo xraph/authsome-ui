@@ -24,6 +24,11 @@ type CookieStore = Awaited<ReturnType<typeof cookies>>;
  * Extracts all cookies and sets them on the adapter for API calls
  */
 function setAdapterContext(adapter: AuthProvider, cookieStore: CookieStore): void {
+  if (!adapter) {
+    console.error('[setAdapterContext] Adapter is undefined');
+    return;
+  }
+
   if (!adapter.setContext) {
     console.log('[setAdapterContext] Adapter does not support setContext');
     return;
@@ -55,6 +60,11 @@ function setAdapterContext(adapter: AuthProvider, cookieStore: CookieStore): voi
  * Clear adapter context
  */
 function clearAdapterContext(adapter: AuthProvider): void {
+  if (!adapter) {
+    console.error('[clearAdapterContext] Adapter is undefined');
+    return;
+  }
+
   if (adapter.clearContext) {
     adapter.clearContext();
   }
@@ -84,17 +94,17 @@ export async function getServerSession(
     try {
       // Get session data from adapter (like middleware does)
       const sessionData = await adapter.getCurrentSessionData();
-      
-      if (!sessionData) {
-        clearAdapterContext(adapter);
-        return null;
-      }
 
-      if (isSessionExpired(sessionData)) {
+    if (!sessionData) {
+        clearAdapterContext(adapter);
+      return null;
+    }
+
+    if (isSessionExpired(sessionData)) {
         await deleteSessionCookie(config, store);
         clearAdapterContext(adapter);
-        return null;
-      }
+      return null;
+    }
 
       // Store/update session in cookie
       await setServerSession(sessionData.user, sessionData.session, config, store);
@@ -205,17 +215,17 @@ export async function getServerUser(
       clearAdapterContext(adapter);
       
       const sessionData = await getSessionData(config, store);
-      
-      if (!sessionData) {
-        return null;
-      }
 
-      if (isSessionExpired(sessionData)) {
+    if (!sessionData) {
+      return null;
+    }
+
+    if (isSessionExpired(sessionData)) {
         await deleteSessionCookie(config, store);
-        return null;
-      }
+      return null;
+    }
 
-      return sessionData.user;
+    return sessionData.user;
     }
   } catch (error) {
     console.error('Error getting server user:', error);
