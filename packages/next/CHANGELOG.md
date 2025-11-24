@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.8...ui-next-v0.1.9) (2025-11-24)
+
+
+### Code Refactoring
+
+* enhance authentication page and session management ([d8cea04](https://github.com/xraph/authsome-ui/commit/d8cea04aae1a2ff0397da7a5c0c8ecbec6c08272))
+* enhance session management and cookie handling in authServer ([fb84281](https://github.com/xraph/authsome-ui/commit/fb84281fef420ac200c4cdb5d37edb8a66ff94c3))
+
 ## [0.1.8](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.7...ui-next-v0.1.8) (2025-11-23)
 
 
