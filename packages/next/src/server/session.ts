@@ -3,7 +3,8 @@
  * Integrates cookie storage with auth provider validation
  */
 
-import type { AuthProvider, Session, User } from '@authsome/ui-core';
+import { cookies } from 'next/headers';
+import type { AuthProvider, Session, User, RequestContext } from '@authsome/ui-core';
 import type { SessionConfig } from '../types';
 import {
   getSessionData,
@@ -14,59 +15,113 @@ import {
 } from './cookies';
 
 /**
+ * Type for the cookie store returned by Next.js cookies()
+ */
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+/**
+ * Set adapter context from cookie store
+ * Extracts all cookies and sets them on the adapter for API calls
+ */
+function setAdapterContext(adapter: AuthProvider, cookieStore: CookieStore): void {
+  if (!adapter.setContext) {
+    console.log('[setAdapterContext] Adapter does not support setContext');
+    return;
+  }
+
+  // Extract all cookies from the cookie store
+  const allCookies = cookieStore.getAll();
+  const cookiesMap: Record<string, string> = {};
+  
+  for (const cookie of allCookies) {
+    cookiesMap[cookie.name] = cookie.value;
+  }
+
+  console.log('[setAdapterContext] Setting context with cookies:', Object.keys(cookiesMap));
+
+  // Build request context with cookies
+  const context: RequestContext = {
+    url: '', // Not relevant for server-side calls
+    method: 'GET',
+    headers: {},
+    cookies: cookiesMap,
+  };
+
+  adapter.setContext(context);
+  console.log('[setAdapterContext] Context set successfully');
+}
+
+/**
+ * Clear adapter context
+ */
+function clearAdapterContext(adapter: AuthProvider): void {
+  if (adapter.clearContext) {
+    adapter.clearContext();
+  }
+}
+
+/**
  * Get server-side session
  * Validates session with adapter if needed
  * 
  * @param adapter - Auth provider adapter
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  * @returns Session or null if not authenticated
  */
 export async function getServerSession(
   adapter: AuthProvider,
-  config?: SessionConfig
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<Session | null> {
   try {
-    const sessionData = await getSessionData(config);
+    // Get or create cookie store
+    const store = cookieStore || await cookies();
+    
+    // Set adapter context with all cookies for API calls
+    setAdapterContext(adapter, store);
 
-    // No session in cookie
-    if (!sessionData) {
-      return null;
-    }
-
-    // Check if session is expired
-    if (isSessionExpired(sessionData)) {
-      await deleteSessionCookie(config);
-      return null;
-    }
-
-    // Optionally validate session with adapter
-    // This ensures the session is still valid on the backend
     try {
-      const currentSession = await adapter.getCurrentSession();
+      // Get session data from adapter (like middleware does)
+      const sessionData = await adapter.getCurrentSessionData();
       
-      // If adapter returns null, session is invalid
-      if (!currentSession) {
-        await deleteSessionCookie(config);
+      if (!sessionData) {
+        clearAdapterContext(adapter);
         return null;
       }
 
-      // Update cookie if session token changed
-      if (currentSession.token !== sessionData.session.token) {
-        const currentUser = await adapter.getCurrentUser();
-        if (currentUser) {
-          await setServerSession(currentUser, currentSession, config);
-        }
-        return currentSession;
+      if (isSessionExpired(sessionData)) {
+        await deleteSessionCookie(config, store);
+        clearAdapterContext(adapter);
+        return null;
       }
 
+      // Store/update session in cookie
+      await setServerSession(sessionData.user, sessionData.session, config, store);
+      
+      clearAdapterContext(adapter);
       return sessionData.session;
     } catch (error) {
-      // If adapter validation fails, try to use cached session
-      // This allows offline tolerance
+      // If adapter call fails, fall back to reading from cookie
+      console.error('Error getting session from adapter, falling back to cookie:', error);
+      clearAdapterContext(adapter);
+      
+      const sessionData = await getSessionData(config, store);
+      
+      if (!sessionData) {
+        return null;
+      }
+
+      if (isSessionExpired(sessionData)) {
+        await deleteSessionCookie(config, store);
+        return null;
+      }
+
       return sessionData.session;
     }
   } catch (error) {
     console.error('Error getting server session:', error);
+    clearAdapterContext(adapter);
     return null;
   }
 }
@@ -78,13 +133,15 @@ export async function getServerSession(
  * @param user - User object
  * @param session - Session object
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  */
 export async function setServerSession(
   user: User,
   session: Session,
-  config?: SessionConfig
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<void> {
-  await setSessionCookie(user, session, config);
+  await setSessionCookie(user, session, config, cookieStore);
 }
 
 /**
@@ -92,9 +149,13 @@ export async function setServerSession(
  * Removes session cookie
  * 
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  */
-export async function clearServerSession(config?: SessionConfig): Promise<void> {
-  await deleteSessionCookie(config);
+export async function clearServerSession(
+  config?: SessionConfig,
+  cookieStore?: CookieStore
+): Promise<void> {
+  await deleteSessionCookie(config, cookieStore);
 }
 
 /**
@@ -102,27 +163,63 @@ export async function clearServerSession(config?: SessionConfig): Promise<void> 
  * 
  * @param adapter - Auth provider adapter
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  * @returns User or null if not authenticated
  */
 export async function getServerUser(
-  _adapter: AuthProvider,
-  config?: SessionConfig
+  adapter: AuthProvider,
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<User | null> {
   try {
-    const sessionData = await getSessionData(config);
+    // Get or create cookie store
+    const store = cookieStore || await cookies();
+    
+    console.log('[getServerUser] Cookie store obtained, cookies count:', store.getAll().length);
+    
+    // Set adapter context with cookies for API calls
+    setAdapterContext(adapter, store);
+    
+    try {
+      // Get session data from adapter (like middleware does)
+      console.log('[getServerUser] Calling adapter.getCurrentSessionData()...');
+      const sessionData = await adapter.getCurrentSessionData();
+      console.log('[getServerUser] Session data from adapter:', sessionData ? 'FOUND' : 'NULL');
+      
+      if (!sessionData) {
+        clearAdapterContext(adapter);
+        return null;
+      }
 
-    if (!sessionData) {
-      return null;
+      if (isSessionExpired(sessionData)) {
+        await deleteSessionCookie(config, store);
+        clearAdapterContext(adapter);
+        return null;
+      }
+
+      clearAdapterContext(adapter);
+      return sessionData.user;
+    } catch (error) {
+      // If adapter call fails, fall back to reading from cookie
+      console.error('Error getting user from adapter, falling back to cookie:', error);
+      clearAdapterContext(adapter);
+      
+      const sessionData = await getSessionData(config, store);
+      
+      if (!sessionData) {
+        return null;
+      }
+
+      if (isSessionExpired(sessionData)) {
+        await deleteSessionCookie(config, store);
+        return null;
+      }
+
+      return sessionData.user;
     }
-
-    if (isSessionExpired(sessionData)) {
-      await deleteSessionCookie(config);
-      return null;
-    }
-
-    return sessionData.user;
   } catch (error) {
     console.error('Error getting server user:', error);
+    clearAdapterContext(adapter);
     return null;
   }
 }
@@ -133,18 +230,26 @@ export async function getServerUser(
  * 
  * @param adapter - Auth provider adapter
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  * @returns Refreshed session or null
  */
 export async function refreshServerSession(
   adapter: AuthProvider,
-  config?: SessionConfig
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<Session | null> {
   try {
-    const sessionData = await getSessionData(config);
+    // Get or create cookie store
+    const store = cookieStore || await cookies();
+    
+    const sessionData = await getSessionData(config, store);
 
     if (!sessionData) {
       return null;
     }
+
+    // Set adapter context with all cookies for API calls
+    setAdapterContext(adapter, store);
 
     // Try to refresh session with adapter
     try {
@@ -152,22 +257,26 @@ export async function refreshServerSession(
       const currentUser = await adapter.getCurrentUser();
 
       if (refreshedSession && currentUser) {
-        await setServerSession(currentUser, refreshedSession, config);
+        await setServerSession(currentUser, refreshedSession, config, store);
+        clearAdapterContext(adapter);
         return refreshedSession;
       }
     } catch (error) {
       // If refresh fails, check if current session is still valid
       if (!isSessionExpired(sessionData)) {
-        await refreshSessionCookie(config);
+        await refreshSessionCookie(config, store);
+        clearAdapterContext(adapter);
         return sessionData.session;
       }
     }
 
     // Session could not be refreshed
-    await clearServerSession(config);
+    await clearServerSession(config, store);
+    clearAdapterContext(adapter);
     return null;
   } catch (error) {
     console.error('Error refreshing server session:', error);
+    clearAdapterContext(adapter);
     return null;
   }
 }
@@ -177,13 +286,17 @@ export async function refreshServerSession(
  * 
  * @param adapter - Auth provider adapter
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  * @returns True if authenticated
  */
 export async function isAuthenticated(
   adapter: AuthProvider,
-  config?: SessionConfig
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<boolean> {
-  const session = await getServerSession(adapter, config);
+  // Get or create cookie store
+  const store = cookieStore || await cookies();
+  const session = await getServerSession(adapter, config, store);
   return session !== null;
 }
 
@@ -193,21 +306,26 @@ export async function isAuthenticated(
  * 
  * @param adapter - Auth provider adapter
  * @param config - Session configuration
+ * @param cookieStore - Optional cookie store from next/headers cookies()
  * @returns Session
  * @throws Error if not authenticated
  */
 export async function requireAuth(
   _adapter: AuthProvider,
-  config?: SessionConfig
+  config?: SessionConfig,
+  cookieStore?: CookieStore
 ): Promise<{ user: User; session: Session }> {
-  const sessionData = await getSessionData(config);
+  // Get or create cookie store
+  const store = cookieStore || await cookies();
+  
+  const sessionData = await getSessionData(config, store);
 
   if (!sessionData) {
     throw new Error('Authentication required');
   }
 
   if (isSessionExpired(sessionData)) {
-    await deleteSessionCookie(config);
+    await deleteSessionCookie(config, store);
     throw new Error('Session expired');
   }
 

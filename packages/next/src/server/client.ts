@@ -5,6 +5,7 @@
 
 'use server';
 
+import { cookies } from 'next/headers';
 import type {
   SignInRequest,
   SignUpRequest,
@@ -29,6 +30,11 @@ import {
   isAuthenticated,
   requireAuth,
 } from './session';
+
+/**
+ * Type for the cookie store returned by Next.js cookies()
+ */
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
 /**
  * Create a server-side auth client
@@ -64,10 +70,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Sign in a user
      */
-    async signIn(data: SignInRequest): Promise<ActionResult> {
+    async signIn(data: SignInRequest, cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         const response = await adapter.signIn(data);
-        await setServerSession(response.user, response.session, sessionConfig);
+        await setServerSession(response.user, response.session, sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signIn
           ? await callbacks.signIn(response.user, response.session)
@@ -89,10 +95,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Sign up a new user
      */
-    async signUp(data: SignUpRequest): Promise<ActionResult> {
+    async signUp(data: SignUpRequest, cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         const response = await adapter.signUp(data);
-        await setServerSession(response.user, response.session, sessionConfig);
+        await setServerSession(response.user, response.session, sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signIn
           ? await callbacks.signIn(response.user, response.session)
@@ -114,10 +120,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Sign out the current user
      */
-    async signOut(): Promise<ActionResult> {
+    async signOut(cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         await adapter.signOut();
-        await clearServerSession(sessionConfig);
+        await clearServerSession(sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signOut
           ? await callbacks.signOut()
@@ -128,7 +134,7 @@ export function createServerAuthClient(config: NextAuthConfig) {
           redirect: redirectUrl,
         };
       } catch (error: any) {
-        await clearServerSession(sessionConfig);
+        await clearServerSession(sessionConfig, cookieStore);
 
         return {
           success: false,
@@ -144,37 +150,37 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Get the current session
      */
-    async getSession(): Promise<Session | null> {
-      return getServerSession(adapter, sessionConfig);
+    async getSession(cookieStore?: CookieStore): Promise<Session | null> {
+      return getServerSession(adapter, sessionConfig, cookieStore);
     },
 
     /**
      * Get the current user
      */
-    async getUser(): Promise<User | null> {
-      return getServerUser(adapter, sessionConfig);
+    async getUser(cookieStore?: CookieStore): Promise<User | null> {
+      return getServerUser(adapter, sessionConfig, cookieStore);
     },
 
     /**
      * Check if user is authenticated
      */
-    async isAuthenticated(): Promise<boolean> {
-      return isAuthenticated(adapter, sessionConfig);
+    async isAuthenticated(cookieStore?: CookieStore): Promise<boolean> {
+      return isAuthenticated(adapter, sessionConfig, cookieStore);
     },
 
     /**
      * Require authentication (throws if not authenticated)
      */
-    async requireAuth(): Promise<{ user: User; session: Session }> {
-      return requireAuth(adapter, sessionConfig);
+    async requireAuth(cookieStore?: CookieStore): Promise<{ user: User; session: Session }> {
+      return requireAuth(adapter, sessionConfig, cookieStore);
     },
 
     /**
      * Refresh the current session
      */
-    async refreshSession(): Promise<ActionResult> {
+    async refreshSession(cookieStore?: CookieStore): Promise<ActionResult> {
       try {
-        const session = await refreshServerSession(adapter, sessionConfig);
+        const session = await refreshServerSession(adapter, sessionConfig, cookieStore);
 
         if (!session) {
           return {
@@ -244,10 +250,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Verify a phone code
      */
-    async verifyPhoneCode(data: PhoneVerifyRequest): Promise<ActionResult> {
+    async verifyPhoneCode(data: PhoneVerifyRequest, cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         const response = await adapter.verifyPhoneCode(data);
-        await setServerSession(response.user, response.session, sessionConfig);
+        await setServerSession(response.user, response.session, sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signIn
           ? await callbacks.signIn(response.user, response.session)
@@ -273,10 +279,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Verify a two-factor code
      */
-    async verifyTwoFactor(data: TwoFactorVerifyRequest): Promise<ActionResult> {
+    async verifyTwoFactor(data: TwoFactorVerifyRequest, cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         const response = await adapter.verifyTwoFactor(data);
-        await setServerSession(response.user, response.session, sessionConfig);
+        await setServerSession(response.user, response.session, sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signIn
           ? await callbacks.signIn(response.user, response.session)
@@ -364,10 +370,10 @@ export function createServerAuthClient(config: NextAuthConfig) {
     /**
      * Authenticate with a passkey
      */
-    async authenticatePasskey(data: PasskeyAuthRequest): Promise<ActionResult> {
+    async authenticatePasskey(data: PasskeyAuthRequest, cookieStore?: CookieStore): Promise<ActionResult> {
       try {
         const response = await adapter.authenticatePasskey(data);
-        await setServerSession(response.user, response.session, sessionConfig);
+        await setServerSession(response.user, response.session, sessionConfig, cookieStore);
 
         const redirectUrl = callbacks?.signIn
           ? await callbacks.signIn(response.user, response.session)

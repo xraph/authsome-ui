@@ -37,6 +37,19 @@ if (process.env.SESSION_SECRET.length < 32) {
 }
 
 /**
+ * Initialize the AuthSome adapter
+ * Must be done before creating the server auth client
+ */
+const adapter = new AuthSomeAdapter();
+adapter.initialize({
+  apiUrl: process.env.AUTHSOME_API_URL || 'https://api.authsome.com',
+  apiKey: process.env.AUTHSOME_API_KEY,
+  basePath: '/api/identity',
+  authMode: 'cookies',
+  plugins: ['social', 'passkey', 'magiclink', 'twofa', 'phone', 'mfa'],
+});
+
+/**
  * Server auth client for Next.js Server Components and Server Actions
  * 
  * Available methods:
@@ -50,11 +63,7 @@ if (process.env.SESSION_SECRET.length < 32) {
  * - OAuth: getOAuthProviders
  */
 export const authServer = createServerAuthClient({
-  adapter: new AuthSomeAdapter(),
-  adapterConfig: {
-    apiUrl: process.env.AUTHSOME_API_URL || 'https://api.authsome.com',
-    apiKey: process.env.AUTHSOME_API_KEY,
-  },
+  adapter,
   session: {
     password: process.env.SESSION_SECRET,
     cookieName: 'authsome_session',
