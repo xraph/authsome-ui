@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.10](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.9...adapter-authsome-v0.1.10) (2025-11-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.6
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.6
+
 ## [0.1.9](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.8...adapter-authsome-v0.1.9) (2025-11-26)
 
 

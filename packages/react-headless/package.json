@@ -1,6 +1,6 @@
 {
   "name": "@authsome/ui-react-headless",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Unstyled, accessible React components for AuthSome UI",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
