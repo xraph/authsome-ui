@@ -6,6 +6,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
 import type { RendererConfig } from '../renderer-config';
+import { DEFAULT_BUILTIN_FIELD_ORDER } from '../renderer-config';
 import type { FlowState, FieldDefinition } from '@authsome/ui-core';
 import { defaultLocale } from '@authsome/ui-core';
 
@@ -68,13 +69,18 @@ export function EmailPasswordRenderer({
           const fields = await adapter.getSignupFields();
           setDynamicFields(fields);
           
-          // Initialize dynamic values with default values
+          // Initialize dynamic values with default values (including nested fields in groups)
           const initialValues: Record<string, any> = {};
-          fields.forEach(field => {
-            if (field.defaultValue !== undefined) {
-              initialValues[field.name] = field.defaultValue;
-            }
-          });
+          const initializeFieldValues = (fieldList: FieldDefinition[]) => {
+            fieldList.forEach(field => {
+              if (field.type === 'group' && field.fields) {
+                initializeFieldValues(field.fields);
+              } else if (field.defaultValue !== undefined) {
+                initialValues[field.name] = field.defaultValue;
+              }
+            });
+          };
+          initializeFieldValues(fields);
           setDynamicValues(initialValues);
         } catch (err) {
           console.error('Failed to fetch signup fields:', err);
@@ -84,53 +90,70 @@ export function EmailPasswordRenderer({
     fetchFields();
   }, [mode, adapter]);
 
+  // Validate a single dynamic field
+  const validateSingleField = (field: FieldDefinition): string | null => {
+    const value = dynamicValues[field.name];
+    const validation = field.validation;
+
+    if (!validation) return null;
+
+    // Required validation
+    if (validation.required && (value === undefined || value === '' || value === null)) {
+      return validation.errorMessage || `${field.label} is required`;
+    }
+
+    // Skip other validations if value is empty and not required
+    if (value === undefined || value === '' || value === null) return null;
+
+    // String length validations
+    if (typeof value === 'string') {
+      if (validation.minLength && value.length < validation.minLength) {
+        return validation.errorMessage || `${field.label} must be at least ${validation.minLength} characters`;
+      }
+      if (validation.maxLength && value.length > validation.maxLength) {
+        return validation.errorMessage || `${field.label} must be at most ${validation.maxLength} characters`;
+      }
+    }
+
+    // Number validations
+    if (typeof value === 'number') {
+      if (validation.min !== undefined && value < validation.min) {
+        return validation.errorMessage || `${field.label} must be at least ${validation.min}`;
+      }
+      if (validation.max !== undefined && value > validation.max) {
+        return validation.errorMessage || `${field.label} must be at most ${validation.max}`;
+      }
+    }
+
+    // Pattern validation
+    if (validation.pattern && typeof value === 'string') {
+      try {
+        const regex = new RegExp(validation.pattern);
+        if (!regex.test(value)) {
+          return validation.errorMessage || `${field.label} format is invalid`;
+        }
+      } catch (e) {
+        console.error('Invalid regex pattern:', validation.pattern);
+      }
+    }
+
+    return null;
+  };
+
   // Validate dynamic fields
   const validateDynamicFields = (): string | null => {
     for (const field of dynamicFields) {
-      const value = dynamicValues[field.name];
-      const validation = field.validation;
-
-      if (!validation) continue;
-
-      // Required validation
-      if (validation.required && (value === undefined || value === '' || value === null)) {
-        return validation.errorMessage || `${field.label} is required`;
+      // Handle group type - validate nested fields
+      if (field.type === 'group' && field.fields) {
+        for (const nestedField of field.fields) {
+          const error = validateSingleField(nestedField);
+          if (error) return error;
+        }
+        continue;
       }
 
-      // Skip other validations if value is empty and not required
-      if (value === undefined || value === '' || value === null) continue;
-
-      // String length validations
-      if (typeof value === 'string') {
-        if (validation.minLength && value.length < validation.minLength) {
-          return validation.errorMessage || `${field.label} must be at least ${validation.minLength} characters`;
-        }
-        if (validation.maxLength && value.length > validation.maxLength) {
-          return validation.errorMessage || `${field.label} must be at most ${validation.maxLength} characters`;
-        }
-      }
-
-      // Number validations
-      if (typeof value === 'number') {
-        if (validation.min !== undefined && value < validation.min) {
-          return validation.errorMessage || `${field.label} must be at least ${validation.min}`;
-        }
-        if (validation.max !== undefined && value > validation.max) {
-          return validation.errorMessage || `${field.label} must be at most ${validation.max}`;
-        }
-      }
-
-      // Pattern validation
-      if (validation.pattern && typeof value === 'string') {
-        try {
-          const regex = new RegExp(validation.pattern);
-          if (!regex.test(value)) {
-            return validation.errorMessage || `${field.label} format is invalid`;
-          }
-        } catch (e) {
-          console.error('Invalid regex pattern:', validation.pattern);
-        }
-      }
+      const error = validateSingleField(field);
+      if (error) return error;
     }
     return null;
   };
@@ -184,14 +207,14 @@ export function EmailPasswordRenderer({
     }
   };
 
-  // Render a dynamic field
-  const renderDynamicField = (field: FieldDefinition) => {
+  // Render a single dynamic field (used for both regular fields and group nested fields)
+  const renderSingleField = (field: FieldDefinition, keyPrefix = 'dynamic') => {
     const value = dynamicValues[field.name];
     const handleChange = (newValue: any) => {
       setDynamicValues(prev => ({ ...prev, [field.name]: newValue }));
     };
 
-    const fieldId = `dynamic-${field.name}`;
+    const fieldId = `${keyPrefix}-${field.name}`;
 
     switch (field.type) {
       case 'text':
@@ -202,7 +225,7 @@ export function EmailPasswordRenderer({
       case 'number':
       case 'date':
         return (
-          <Field.Field key={field.name}>
+          <Field.Field key={field.name} className="flex-1 min-w-0">
             <Field.FieldLabel htmlFor={fieldId}>
               {field.label}
               {field.validation?.required && ' *'}
@@ -229,7 +252,7 @@ export function EmailPasswordRenderer({
       case 'textarea':
         if (!Textarea) return null;
         return (
-          <Field.Field key={field.name}>
+          <Field.Field key={field.name} className="flex-1 min-w-0">
             <Field.FieldLabel htmlFor={fieldId}>
               {field.label}
               {field.validation?.required && ' *'}
@@ -251,7 +274,7 @@ export function EmailPasswordRenderer({
       case 'select':
         if (!Select || !field.options) return null;
         return (
-          <Field.Field key={field.name}>
+          <Field.Field key={field.name} className="flex-1 min-w-0">
             <Field.FieldLabel htmlFor={fieldId}>
               {field.label}
               {field.validation?.required && ' *'}
@@ -264,7 +287,7 @@ export function EmailPasswordRenderer({
               <Select.Trigger id={fieldId}>
                 <Select.Value placeholder={field.placeholder || 'Select...'} />
               </Select.Trigger>
-                <Select.Content>
+              <Select.Content>
                 {field.options.map((option) => (
                   <Select.Item key={option.value} value={option.value}>
                     {option.label}
@@ -281,7 +304,7 @@ export function EmailPasswordRenderer({
       case 'checkbox':
         if (!Checkbox) return null;
         return (
-          <Field.Field key={field.name}>
+          <Field.Field key={field.name} className="flex-1 min-w-0">
             <Checkbox
               id={fieldId}
               checked={!!value}
@@ -296,6 +319,151 @@ export function EmailPasswordRenderer({
       default:
         return null;
     }
+  };
+
+  // Sort fields by order (fields with order come first, sorted ascending; fields without order come after)
+  const sortFieldsByOrder = <T extends { order?: number }>(fields: T[]): T[] => {
+    return [...fields].sort((a, b) => {
+      // Fields with order come before fields without order
+      if (a.order !== undefined && b.order === undefined) return -1;
+      if (a.order === undefined && b.order !== undefined) return 1;
+      // Both have order - sort ascending
+      if (a.order !== undefined && b.order !== undefined) return a.order - b.order;
+      // Neither has order - maintain original order
+      return 0;
+    });
+  };
+
+  // Render a dynamic field (handles groups and regular fields)
+  const renderDynamicField = (field: FieldDefinition) => {
+    // Handle group type - render multiple fields in a row
+    if (field.type === 'group' && field.fields && field.fields.length > 0) {
+      const gap = field.gap || '1rem';
+      // Sort nested fields within group by order as well
+      const sortedNestedFields = sortFieldsByOrder(field.fields);
+      return (
+        <div
+          key={field.name}
+          className="flex flex-row items-start"
+          style={{ gap }}
+        >
+          {sortedNestedFields.map((nestedField) => renderSingleField(nestedField, `group-${field.name}`))}
+        </div>
+      );
+    }
+
+    return renderSingleField(field);
+  };
+
+  // Get built-in field order with defaults
+  const builtInFieldOrder = useMemo(() => ({
+    ...DEFAULT_BUILTIN_FIELD_ORDER,
+    ...signUpConfig.builtInFieldOrder,
+  }), [signUpConfig.builtInFieldOrder]);
+
+  // Type for unified signup form items
+  type SignupFormItem =
+    | { itemType: 'email'; order: number }
+    | { itemType: 'password'; order: number }
+    | { itemType: 'confirmPassword'; order: number }
+    | { itemType: 'dynamic'; field: FieldDefinition; order: number };
+
+  // Build unified sorted list of signup form items
+  const signupFormItems = useMemo((): SignupFormItem[] => {
+    if (mode !== 'signup') return [];
+
+    const items: SignupFormItem[] = [];
+
+    // Add built-in fields with their configured order
+    items.push({ itemType: 'email', order: builtInFieldOrder.email });
+    items.push({ itemType: 'password', order: builtInFieldOrder.password });
+    items.push({ itemType: 'confirmPassword', order: builtInFieldOrder.confirmPassword });
+
+    // Add dynamic fields
+    dynamicFields.forEach((field) => {
+      const order = field.order ?? Infinity;
+      items.push({ itemType: 'dynamic', field, order });
+    });
+
+    // Sort all items by order
+    return items.sort((a, b) => {
+      if (a.order === Infinity && b.order === Infinity) return 0;
+      if (a.order === Infinity) return 1;
+      if (b.order === Infinity) return -1;
+      return a.order - b.order;
+    });
+  }, [mode, builtInFieldOrder, dynamicFields]);
+
+  // Render email field (built-in)
+  const renderEmailField = () => (
+    <Field.Field key="builtin-email">
+      <Field.FieldLabel htmlFor="email">{locale.auth?.email || 'Email'}</Field.FieldLabel>
+      <Input
+        id="email"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="john@example.com"
+        required
+        disabled={loading || isLoading}
+        aria-invalid={!!error}
+      />
+    </Field.Field>
+  );
+
+  // Render password field (built-in)
+  const renderPasswordField = () => (
+    <Field.Field key="builtin-password">
+      <Field.FieldLabel htmlFor="password">{locale.auth?.password || 'Password'}</Field.FieldLabel>
+      <Input
+        id="password"
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="••••••••"
+        required
+        disabled={loading || isLoading}
+        aria-invalid={!!error}
+      />
+      {mode === 'signup' && (
+        <Field.FieldDescription>At least 8 characters</Field.FieldDescription>
+      )}
+    </Field.Field>
+  );
+
+  // Render confirm password field (built-in, signup only)
+  const renderConfirmPasswordField = () => (
+    <Field.Field key="builtin-confirmPassword">
+      <Field.FieldLabel htmlFor="confirmPassword">{locale.auth?.confirmPassword || 'Confirm Password'}</Field.FieldLabel>
+      <Input
+        id="confirmPassword"
+        type="password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        placeholder="••••••••"
+        required
+        disabled={loading || isLoading}
+        aria-invalid={!!error}
+      />
+    </Field.Field>
+  );
+
+  // Render unified signup form fields (sorted by order)
+  const renderSignupFormFields = () => {
+    return signupFormItems.map((item) => {
+      switch (item.itemType) {
+        case 'email':
+          return renderEmailField();
+        case 'password':
+          return renderPasswordField();
+        case 'confirmPassword':
+          return renderConfirmPasswordField();
+        case 'dynamic':
+          return renderDynamicField(item.field);
+        default:
+          return null;
+      }
+    });
   };
 
   return (
@@ -318,63 +486,49 @@ export function EmailPasswordRenderer({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field.Field>
-          <Field.FieldLabel htmlFor="email">Email</Field.FieldLabel>
-        <Input
-            id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="john@example.com"
-          required
-          disabled={loading || isLoading}
-            aria-invalid={!!error}
-        />
-        </Field.Field>
+        {/* Sign-in mode: simple email + password */}
+        {mode === 'signin' && (
+          <>
+            <Field.Field>
+              <Field.FieldLabel htmlFor="email">{locale.auth?.email || 'Email'}</Field.FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="john@example.com"
+                required
+                disabled={loading || isLoading}
+                aria-invalid={!!error}
+              />
+            </Field.Field>
 
-        <Field.Field>
-          <Field.FieldLabel htmlFor="password">Password</Field.FieldLabel>
-        <Input
-            id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          required
-          disabled={loading || isLoading}
-            aria-invalid={!!error}
-        />
-          {mode === 'signup' && (
-            <Field.FieldDescription>At least 8 characters</Field.FieldDescription>
-          )}
-        </Field.Field>
+            <Field.Field>
+              <Field.FieldLabel htmlFor="password">{locale.auth?.password || 'Password'}</Field.FieldLabel>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                disabled={loading || isLoading}
+                aria-invalid={!!error}
+              />
+            </Field.Field>
+          </>
+        )}
 
-        {mode === 'signup' && (
-          <Field.Field>
-            <Field.FieldLabel htmlFor="confirmPassword">Confirm Password</Field.FieldLabel>
-          <Input
-              id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            disabled={loading || isLoading}
-              aria-invalid={!!error}
-            />
-          </Field.Field>
-          )}
+        {/* Sign-up mode: unified field ordering (email, dynamic, password, confirmPassword) */}
+        {mode === 'signup' && renderSignupFormFields()}
 
-          {/* Render dynamic fields for signup */}
-          {mode === 'signup' && dynamicFields.map(field => renderDynamicField(field))}
-
-          <Button
-            type="submit"
-            loading={loading || isLoading}
+        <Button
+          type="submit"
+          loading={loading || isLoading}
           className="w-full"
-          >
-            {mode === 'signin' ? (locale.auth?.signIn || 'Sign In') : (locale.signUp?.title || 'Create Account')}
-          </Button>
+        >
+          {mode === 'signin' ? (locale.auth?.signIn || 'Sign In') : (locale.signUp?.title || 'Create Account')}
+        </Button>
       </form>
 
       {/* Sign-in/Sign-up link */}

@@ -38,13 +38,15 @@ export { validateUIComponents, REQUIRED_COMPONENTS } from './flows/ui-components
 export type {
   RendererConfig,
   AuthMethodConfig,
+  AuthMethodKey,
   SignUpConfig,
   SignInConfig,
   CustomField,
   FieldType,
   RedirectConfig,
+  BuiltInFieldOrder,
 } from './flows/renderer-config';
-export { defaultRendererConfig, mergeRendererConfig } from './flows/renderer-config';
+export { defaultRendererConfig, mergeRendererConfig, DEFAULT_BUILTIN_FIELD_ORDER } from './flows/renderer-config';
 
 // Export default components
 export {

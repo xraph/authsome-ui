@@ -82,7 +82,7 @@ export interface AuthMethodConfig {
 /**
  * Custom field types
  */
-export type FieldType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'number' | 'date' | 'select' | 'checkbox' | 'textarea';
+export type FieldType = 'text' | 'email' | 'password' | 'tel' | 'url' | 'number' | 'date' | 'select' | 'checkbox' | 'textarea' | 'group';
 
 /**
  * Custom field definition
@@ -159,7 +159,64 @@ export interface CustomField {
    * Maximum value for number fields
    */
   max?: number;
+
+  /**
+   * Nested fields for 'group' type
+   * Groups render multiple fields in a horizontal row with a gap
+   */
+  fields?: CustomField[];
+
+  /**
+   * Gap between fields in a group (CSS gap value)
+   * @default '1rem'
+   */
+  gap?: string;
+
+  /**
+   * Order priority for field positioning
+   * Lower numbers appear first. Fields without order are sorted after ordered fields.
+   * Use builtInFieldOrder in SignUpConfig to control email/password/confirmPassword positioning.
+   * @default undefined
+   */
+  order?: number;
 }
+
+/**
+ * Auth method keys that can be hidden
+ */
+export type AuthMethodKey = 'emailPassword' | 'oauth' | 'magicLink' | 'phone' | 'passkey' | 'username';
+
+/**
+ * Built-in field order configuration for signup form
+ * Allows repositioning of email, password, and confirmPassword fields
+ * relative to custom/dynamic fields
+ */
+export interface BuiltInFieldOrder {
+  /**
+   * Order for the email field
+   * @default 0 (renders first)
+   */
+  email?: number;
+  /**
+   * Order for the password field
+   * @default 1000 (renders near end)
+   */
+  password?: number;
+  /**
+   * Order for the confirm password field
+   * @default 1001 (renders last, before terms)
+   */
+  confirmPassword?: number;
+}
+
+/**
+ * Default order values for built-in fields
+ */
+export const DEFAULT_BUILTIN_FIELD_ORDER: Required<BuiltInFieldOrder> = {
+  email: 0,
+  password: 1000,
+  confirmPassword: 1001,
+};
 
 /**
  * Sign-up configuration
@@ -214,6 +271,42 @@ export interface SignUpConfig {
    * @default '/auth/signin'
    */
   signInUrl?: string;
+
+  /**
+   * Override the global socialFirst setting for signup
+   * When set, this takes precedence over the global socialFirst setting
+   * @default undefined (uses global socialFirst)
+   */
+  socialFirst?: boolean;
+
+  /**
+   * Auth methods to hide specifically during signup
+   * These methods will not be shown on the signup form even if enabled globally
+   * Useful for hiding methods like magicLink or passkey during signup
+   * 
+   * @example
+   * ```typescript
+   * hiddenAuthMethods: ['magicLink', 'passkey', 'phone']
+   * ```
+   */
+  hiddenAuthMethods?: AuthMethodKey[];
+
+  /**
+   * Order configuration for built-in fields (email, password, confirmPassword)
+   * Allows repositioning these fields relative to custom/dynamic fields
+   * 
+   * @default { email: 0, password: 1000, confirmPassword: 1001 }
+   * 
+   * @example
+   * ```typescript
+   * builtInFieldOrder: {
+   *   email: 10,        // Email after custom fields with order < 10
+   *   password: 100,
+   *   confirmPassword: 101,
+   * }
+   * ```
+   */
+  builtInFieldOrder?: BuiltInFieldOrder;
 }
 
 /**
@@ -261,6 +354,13 @@ export interface SignInConfig {
    * @default '/auth/signup'
    */
   signUpUrl?: string;
+
+  /**
+   * Override the global socialFirst setting for signin
+   * When set, this takes precedence over the global socialFirst setting
+   * @default undefined (uses global socialFirst)
+   */
+  socialFirst?: boolean;
 }
 
 /**

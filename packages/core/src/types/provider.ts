@@ -177,17 +177,38 @@ export interface FieldValidation {
 }
 
 /**
+ * Field type for dynamic signup forms
+ */
+export type FieldType = 'text' | 'email' | 'tel' | 'number' | 'select' | 'checkbox' | 'textarea' | 'date' | 'url' | 'password' | 'group';
+
+/**
  * Dynamic field definition for signup forms
  */
 export interface FieldDefinition {
   name: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'number' | 'select' | 'checkbox' | 'textarea' | 'date' | 'url' | 'password';
+  type: FieldType;
   placeholder?: string;
   helperText?: string;
   defaultValue?: string | number | boolean;
   options?: Array<{ value: string; label: string }>;
   validation?: FieldValidation;
+  /**
+   * Nested fields for 'group' type
+   * Groups render multiple fields in a horizontal row with a gap
+   */
+  fields?: FieldDefinition[];
+  /**
+   * Gap between fields in a group (CSS gap value)
+   * @default '1rem'
+   */
+  gap?: string;
+  /**
+   * Order priority for field positioning
+   * Lower numbers appear first. Fields without order are sorted after ordered fields.
+   * @default undefined
+   */
+  order?: number;
 }
 
 /**
