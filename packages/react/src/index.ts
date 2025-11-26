@@ -42,6 +42,7 @@ export type {
   SignInConfig,
   CustomField,
   FieldType,
+  RedirectConfig,
 } from './flows/renderer-config';
 export { defaultRendererConfig, mergeRendererConfig } from './flows/renderer-config';
 

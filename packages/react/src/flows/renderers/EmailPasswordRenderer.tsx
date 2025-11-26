@@ -2,10 +2,21 @@
  * Email/Password authentication renderer
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
+import type { RendererConfig } from '../renderer-config';
 import type { FlowState, FieldDefinition } from '@authsome/ui-core';
+import { defaultLocale } from '@authsome/ui-core';
+
+/**
+ * Get callback URL from URL search params (client-side only)
+ */
+function getCallbackUrlFromParams(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const searchParams = new URLSearchParams(window.location.search);
+  return searchParams.get('callbackUrl') || searchParams.get('redirectTo') || undefined;
+}
 
 export interface EmailPasswordRendererProps {
   state: FlowState;
@@ -13,6 +24,7 @@ export interface EmailPasswordRendererProps {
   onBack?: () => Promise<void>;
   isLoading: boolean;
   uiComponents: UIComponents;
+  rendererConfig?: RendererConfig;
   mode?: 'signin' | 'signup';
 }
 
@@ -22,11 +34,20 @@ export function EmailPasswordRenderer({
   onBack: _onBack,
   isLoading,
   uiComponents,
+  rendererConfig,
   mode = 'signin',
 }: EmailPasswordRendererProps) {
   const auth = useAuth();
   const { signIn, signUp, adapter } = auth;
   const { Input, Button, Alert: AlertComponents, Field, Select, Checkbox, Textarea } = uiComponents;
+  
+  const config = rendererConfig || {};
+  const signUpConfig = config.signUp || {};
+  const signInConfig = config.signIn || {};
+  const locale = config.locale || defaultLocale;
+
+  // Capture callbackUrl from URL params on mount (for redirect after auth)
+  const callbackUrl = useMemo(() => getCallbackUrlFromParams(), []);
   
   // Destructure Alert composite components
   const { Alert, AlertDescription } = AlertComponents || {};
@@ -151,7 +172,11 @@ export function EmailPasswordRenderer({
       }
 
       // Auth state is updated internally, just move to next step
-      await onNext({ email });
+      // Include callbackUrl in metadata for redirect after flow completes
+      await onNext({ 
+        email,
+        metadata: { ...state.metadata, callbackUrl },
+      });
     } catch (err: any) {
       setError(err.message || `${mode === 'signin' ? 'Sign in' : 'Sign up'} failed`);
     } finally {
@@ -348,9 +373,33 @@ export function EmailPasswordRenderer({
             loading={loading || isLoading}
           className="w-full"
           >
-            {mode === 'signin' ? 'Sign In' : 'Create Account'}
+            {mode === 'signin' ? (locale.auth?.signIn || 'Sign In') : (locale.signUp?.title || 'Create Account')}
           </Button>
       </form>
+
+      {/* Sign-in/Sign-up link */}
+      {mode === 'signin' && signInConfig.showSignUpLink !== false && (
+        <p className="text-center text-sm text-gray-600">
+          {locale.signIn?.noAccount || "Don't have an account?"}{' '}
+          <a 
+            href={signInConfig.signUpUrl || '/auth/signup'} 
+            className="font-medium text-primary hover:underline"
+          >
+            {locale.signIn?.signUpLink || locale.auth?.signUp || 'Sign up'}
+          </a>
+        </p>
+      )}
+      {mode === 'signup' && signUpConfig.showSignInLink !== false && (
+        <p className="text-center text-sm text-gray-600">
+          {locale.signUp?.haveAccount || 'Already have an account?'}{' '}
+          <a 
+            href={signUpConfig.signInUrl || '/auth/signin'} 
+            className="font-medium text-primary hover:underline"
+          >
+            {locale.signUp?.signInLink || locale.auth?.signIn || 'Sign in'}
+          </a>
+        </p>
+      )}
     </div>
   );
 }

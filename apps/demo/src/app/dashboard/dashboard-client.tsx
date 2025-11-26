@@ -9,8 +9,8 @@
 
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, User, Mail, Clock, Key, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Shield, User, Mail, Clock, Key } from 'lucide-react';
+import { UserAccountPicker } from '@/components/UserAccountPicker';
 
 interface DashboardClientProps {
   user: any;
@@ -47,18 +47,7 @@ export function DashboardClient({ user, session }: DashboardClientProps) {
             <h1 className="text-xl font-bold">Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.email}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSignOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+            <UserAccountPicker user={user} onSignOut={handleSignOut} />
           </div>
         </div>
       </header>

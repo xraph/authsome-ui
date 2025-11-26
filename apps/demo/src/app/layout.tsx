@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { NextAuthProvider } from '@authsome/ui-next';
-import { authConfig } from '@/lib/auth-config';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -12,13 +10,10 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root Layout - Wraps entire app with authentication context
+ * Root Layout
  * 
- * The NextAuthProvider provides:
- * - Auth state management
- * - Session synchronization
- * - UI component configuration
- * - Error handling
+ * Note: NextAuthProvider is added in the /auth layout for auth pages only.
+ * For non-auth pages that need auth, add the provider to their specific layouts.
  */
 export default function RootLayout({
   children,
@@ -28,9 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <NextAuthProvider config={authConfig}>
-          {children}
-        </NextAuthProvider>
+        {children}
       </body>
     </html>
   );

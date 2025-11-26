@@ -6,8 +6,9 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import { AuthProvider } from '@authsome/ui-react';
-import { predefinedFlows, FlowConfigType } from '@authsome/ui-core';
+import { predefinedFlows, FlowConfigType, FlowStep } from '@authsome/ui-core';
 import { createNextAuthClient } from '../lib/create-next-client';
 import type { NextAuthConfig } from '../types';
 
@@ -78,20 +79,80 @@ export interface NextAuthProviderProps {
  * ```
  */
 export function NextAuthProvider({ config, children }: NextAuthProviderProps) {
+  const pathname = usePathname();
+  
   // Create Next.js-specific client that uses server actions
   const nextClient = React.useMemo(
     () => createNextAuthClient(config.adapter),
     [config.adapter]
   );
 
-  // Use the sign-in with MFA flow as default (supports both simple and MFA sign-in)
-  const defaultFlow = predefinedFlows[FlowConfigType.SIGN_IN_WITH_MFA];
+  // Determine flow and initial state based on pathname
+  const { flows, initialFlowState, routeKey } = React.useMemo(() => {
+    // If config has explicit flows, use them
+    if (config.flows) {
+      return {
+        flows: config.flows,
+        initialFlowState: config.initialFlowState,
+        routeKey: 'custom',
+      };
+    }
+
+    // Map pathname to appropriate flow
+    const basePath = config.basePath || '/auth';
+    if (pathname?.startsWith(basePath)) {
+      const route = pathname.slice(basePath.length + 1).split('/')[0] || '';
+      
+      switch (route) {
+        case 'forgot-password':
+        case 'reset-password':
+          return {
+            flows: predefinedFlows[FlowConfigType.PASSWORD_RESET_FLOW],
+            initialFlowState: route === 'reset-password' 
+              ? { currentStep: FlowStep.PASSWORD_RESET_CONFIRM }
+              : { currentStep: FlowStep.PASSWORD_RESET_REQUEST },
+            routeKey: route,
+          };
+        
+        case 'verify-email':
+          // Use email verification flow
+          return {
+            flows: predefinedFlows[FlowConfigType.EMAIL_VERIFICATION_FLOW],
+            initialFlowState: { currentStep: FlowStep.EMAIL_VERIFICATION_REQUIRED },
+            routeKey: 'verify-email',
+          };
+        
+        case 'signup':
+          return {
+            flows: predefinedFlows[FlowConfigType.COMPLETE_SIGN_UP_FLOW],
+            initialFlowState: { currentStep: FlowStep.EMAIL_PASSWORD_SIGN_UP },
+            routeKey: 'signup',
+          };
+        
+        case 'signin':
+        default:
+          return {
+            flows: predefinedFlows[FlowConfigType.SIGN_IN_WITH_MFA],
+            initialFlowState: config.initialFlowState || { currentStep: FlowStep.EMAIL_PASSWORD_SIGN_IN },
+            routeKey: 'signin',
+          };
+      }
+    }
+
+    // Default to sign-in with MFA flow
+    return {
+      flows: predefinedFlows[FlowConfigType.SIGN_IN_WITH_MFA],
+      initialFlowState: config.initialFlowState,
+      routeKey: 'default',
+    };
+  }, [pathname, config.basePath, config.flows, config.initialFlowState]);
 
   return (
     <AuthProvider
+      key={routeKey}
       client={nextClient}
-      flows={config.flows || defaultFlow}
-      initialFlowState={config.initialFlowState}
+      flows={flows}
+      initialFlowState={initialFlowState}
       uiComponents={config.uiComponents}
       rendererConfig={config.rendererConfig}
       locale={config.locale}

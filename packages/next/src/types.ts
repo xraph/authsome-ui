@@ -18,7 +18,7 @@ import type { UIComponents, RendererConfig } from '@authsome/ui-react';
 /**
  * Authentication route types
  */
-export type AuthRoute = 'signin' | 'signup' | 'callback' | 'signout' | 'error' | 'verify';
+export type AuthRoute = 'signin' | 'signup' | 'callback' | 'signout' | 'error' | 'verify' | 'forgot-password' | 'reset-password' | 'verify-email';
 
 /**
  * Parsed route information from catch-all segments
@@ -116,6 +116,24 @@ export interface PageConfig {
    * @default '/auth/verify'
    */
   verify?: string;
+
+  /**
+   * Forgot password page path
+   * @default '/auth/forgot-password'
+   */
+  forgotPassword?: string;
+
+  /**
+   * Reset password page path
+   * @default '/auth/reset-password'
+   */
+  resetPassword?: string;
+
+  /**
+   * Email verification page path
+   * @default '/auth/verify-email'
+   */
+  verifyEmail?: string;
 }
 
 /**

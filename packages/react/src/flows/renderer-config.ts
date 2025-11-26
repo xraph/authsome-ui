@@ -2,7 +2,7 @@
  * Configuration for built-in renderers
  */
 
-import type { OAuthProvider, AuthLocale, DeepPartial } from '@authsome/ui-core';
+import type { OAuthProvider, AuthLocale, DeepPartial, User, Session, FlowState } from '@authsome/ui-core';
 
 /**
  * Auth method configuration
@@ -59,6 +59,24 @@ export interface AuthMethodConfig {
    * @default false
    */
   username?: boolean;
+
+  /**
+   * Enable password reset flow
+   * @default false
+   */
+  passwordReset?: boolean;
+
+  /**
+   * Enable email verification
+   * @default false
+   */
+  emailVerification?: boolean | {
+    /**
+     * Verification method: code, link, or both
+     * @default 'both'
+     */
+    method?: 'code' | 'link' | 'both';
+  };
 }
 
 /**
@@ -184,6 +202,18 @@ export interface SignUpConfig {
    * Custom validation function for signup data
    */
   validate?: (data: Record<string, any>) => string | null;
+
+  /**
+   * Show link to sign in page
+   * @default true
+   */
+  showSignInLink?: boolean;
+
+  /**
+   * URL for sign in page
+   * @default '/auth/signin'
+   */
+  signInUrl?: string;
 }
 
 /**
@@ -219,6 +249,18 @@ export interface SignInConfig {
    * @default true when multiple email-based methods are enabled
    */
   enableDynamicFlow?: boolean;
+
+  /**
+   * Show link to sign up page
+   * @default true
+   */
+  showSignUpLink?: boolean;
+
+  /**
+   * URL for sign up page
+   * @default '/auth/signup'
+   */
+  signUpUrl?: string;
 }
 
 /**
@@ -276,6 +318,52 @@ export interface RendererConfig {
    * ```
    */
   locale?: DeepPartial<AuthLocale>;
+
+  /**
+   * Redirect configuration for post-authentication navigation
+   * 
+   * The redirect only happens when the flow reaches the terminal SUCCESS step.
+   * Intermediate steps (like email verification) are handled by the flow engine.
+   */
+  redirect?: RedirectConfig;
+}
+
+/**
+ * Redirect configuration
+ */
+export interface RedirectConfig {
+  /**
+   * Default URL to redirect to after successful authentication
+   * This is used when no callbackUrl is provided in the URL params
+   * @default '/'
+   */
+  defaultUrl?: string;
+
+  /**
+   * Whether to automatically redirect when the flow reaches SUCCESS
+   * Set to false if you want to show a success screen instead
+   * @default true
+   */
+  autoRedirect?: boolean;
+
+  /**
+   * Delay in milliseconds before redirecting (to show success message)
+   * Only applies when autoRedirect is true
+   * @default 0 (immediate redirect)
+   */
+  redirectDelay?: number;
+
+  /**
+   * Custom redirect handler
+   * If provided, this will be called instead of the default redirect behavior
+   * Useful for custom navigation (e.g., using Next.js router)
+   * 
+   * @param url - The URL to redirect to (callbackUrl or defaultUrl)
+   * @param user - The authenticated user
+   * @param session - The user's session
+   * @param flowState - The current flow state (contains metadata like callbackUrl)
+   */
+  onRedirect?: (url: string, user: User, session: Session, flowState?: FlowState) => void;
 }
 
 /**
@@ -289,22 +377,33 @@ export const defaultRendererConfig: RendererConfig = {
     phone: false,
     passkey: false,
     username: false,
+    passwordReset: false,
+    emailVerification: false,
   },
   signIn: {
     showRememberMe: true,
     showForgotPassword: true,
+    showSignUpLink: true,
+    signUpUrl: '/auth/signup',
   },
   signUp: {
     requireEmailVerification: false,
     showTermsCheckbox: false,
     useDynamicFields: true,
+    showSignInLink: true,
+    signInUrl: '/auth/signin',
   },
   socialFirst: true,
   labels: {
     signIn: 'Sign In',
     signUp: 'Sign Up',
     or: 'Or continue with',
-    continueWith: 'Continue with',
+    continueWith: 'Continue with {provider}',
+  },
+  redirect: {
+    defaultUrl: '/',
+    autoRedirect: true,
+    redirectDelay: 0,
   },
 };
 
@@ -333,6 +432,10 @@ export function mergeRendererConfig(userConfig?: RendererConfig): RendererConfig
       ...userConfig.labels,
     },
     locale: userConfig.locale,
+    redirect: {
+      ...defaultRendererConfig.redirect,
+      ...userConfig.redirect,
+    },
   };
 }
 

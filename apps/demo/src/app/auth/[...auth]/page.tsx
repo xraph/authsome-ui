@@ -14,7 +14,7 @@
  * UI based on the route segments.
  */
 
-import { AuthFlowClient } from '@authsome/ui-next';
+import { AuthFlowClient, OAuthProvider } from '@authsome/ui-next';
 import { getAuthPageProps, createAuthMetadata } from '@authsome/ui-next/server';
 import { redirect } from 'next/navigation';
 import { authConfig } from '@/lib/auth-config';
@@ -47,10 +47,11 @@ export default async function AuthPage(props: AuthPageProps) {
   // Get page props from Next.js route helpers
   const pageProps = await getAuthPageProps({ 
     ...props, 
-    config: serverConfig 
+    config: serverConfig,
   });
 
-  // Handle server-side redirects (e.g., already logged in)
+  // Handle
+  //  server-side redirects (e.g., already logged in)
   if (pageProps.redirect) {
     redirect(pageProps.redirect);
   }

@@ -236,6 +236,31 @@ export const passwordResetFlow: FlowConfig = {
 };
 
 /**
+ * Email verification flow
+ */
+export const emailVerificationFlow: FlowConfig = {
+  name: 'Email Verification',
+  description: 'Verify email address with code or link',
+  initialStep: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+  allowedSteps: [
+    FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    FlowStep.EMAIL_VERIFICATION_SENT,
+    FlowStep.SUCCESS,
+    FlowStep.ERROR,
+  ],
+  transitions: {
+    [FlowStep.EMAIL_VERIFICATION_REQUIRED]: {
+      onSuccess: FlowStep.EMAIL_VERIFICATION_SENT,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    },
+    [FlowStep.EMAIL_VERIFICATION_SENT]: {
+      onSuccess: FlowStep.SUCCESS,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    },
+  },
+};
+
+/**
  * Get predefined flow configuration by type
  */
 export function getFlowConfig(type: FlowConfigType): FlowConfig {
@@ -261,6 +286,9 @@ export function getFlowConfig(type: FlowConfigType): FlowConfig {
     case FlowConfigType.PASSWORD_RESET_FLOW:
       return passwordResetFlow;
     
+    case FlowConfigType.EMAIL_VERIFICATION_FLOW:
+      return emailVerificationFlow;
+    
     default:
       throw new Error(`Unknown flow type: ${type}`);
   }
@@ -277,5 +305,6 @@ export const predefinedFlows = {
   [FlowConfigType.PHONE_AUTH_FLOW]: phoneAuthFlow,
   [FlowConfigType.OAUTH_SIGN_IN]: oauthSignInFlow,
   [FlowConfigType.PASSWORD_RESET_FLOW]: passwordResetFlow,
+  [FlowConfigType.EMAIL_VERIFICATION_FLOW]: emailVerificationFlow,
 };
 

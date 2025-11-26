@@ -5,12 +5,21 @@
  * with Microsoft/Google-style dynamic flow for sign-in
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks';
 import type { UIComponents } from '../ui-components';
 import type { RendererConfig } from '../renderer-config';
 import type { FlowState, OAuthProvider, FieldDefinition } from '@authsome/ui-core';
 import { defaultLocale, interpolate } from '@authsome/ui-core';
+
+/**
+ * Get callback URL from URL search params (client-side only)
+ */
+function getCallbackUrlFromParams(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const searchParams = new URLSearchParams(window.location.search);
+  return searchParams.get('callbackUrl') || searchParams.get('redirectTo') || undefined;
+}
 
 export interface UnifiedAuthRendererProps {
   state: FlowState;
@@ -59,6 +68,9 @@ export function UnifiedAuthRenderer({
   const signInConfig = config.signIn || {};
   const labels = config.labels || {};
   const locale = config.locale || defaultLocale;
+
+  // Capture callbackUrl from URL params on mount (for redirect after auth)
+  const callbackUrl = useMemo(() => getCallbackUrlFromParams(), []);
 
   // Detect if we should use dynamic flow
   const hasMultipleEmailMethods = 
@@ -243,7 +255,11 @@ export function UnifiedAuthRenderer({
       }
 
       // Auth state is updated internally, just move to next step
-      await onNext({ email: formData.email });
+      // Include callbackUrl in metadata for redirect after flow completes
+      await onNext({ 
+        email: formData.email,
+        metadata: { ...state.metadata, callbackUrl },
+      });
     } catch (err: any) {
       setError(err.message || `${mode === 'signin' ? 'Sign in' : 'Sign up'} failed`);
     } finally {
@@ -268,9 +284,14 @@ export function UnifiedAuthRenderer({
       });
       
       if (url) {
+        // For OAuth, append callbackUrl to the OAuth state if needed
+        // The OAuth callback handler will read it from state
         window.location.href = url;
       } else {
-        await onNext({ oauthProvider: provider });
+        await onNext({ 
+          oauthProvider: provider,
+          metadata: { ...state.metadata, callbackUrl },
+        });
       }
     } catch (err: any) {
       setError(err.message || `Failed to sign in with ${provider}`);
@@ -314,7 +335,9 @@ export function UnifiedAuthRenderer({
     try {
       await authenticatePasskey({});
       // Auth state is updated internally, just move to next step
-      await onNext({});
+      await onNext({
+        metadata: { ...state.metadata, callbackUrl },
+      });
     } catch (err: any) {
       setError(err.message || 'Passkey authentication failed');
       setLoading(false);
@@ -335,7 +358,10 @@ export function UnifiedAuthRenderer({
     try {
       if (sendPhoneCode) {
         await sendPhoneCode({ phone: formData.phone });
-        await onNext({ phone: formData.phone });
+        await onNext({ 
+          phone: formData.phone,
+          metadata: { ...state.metadata, callbackUrl },
+        });
       }
     } catch (err: any) {
       setError(err.message || 'Failed to send verification code');
@@ -726,6 +752,19 @@ export function UnifiedAuthRenderer({
             </Button>
           </>
         )}
+
+        {/* Sign-up link */}
+        {signInConfig.showSignUpLink !== false && (
+          <p className="text-center text-sm text-gray-600">
+            {locale.signIn?.noAccount || "Don't have an account?"}{' '}
+            <a 
+              href={signInConfig.signUpUrl || '/auth/signup'} 
+              className="font-medium text-primary hover:underline"
+            >
+              {locale.signIn?.signUpLink || locale.auth?.signUp || 'Sign up'}
+            </a>
+          </p>
+        )}
       </div>
     );
   }
@@ -786,7 +825,7 @@ export function UnifiedAuthRenderer({
             </Field.Field>
 
             {signInConfig.showRememberMe && Checkbox && (
-              <Field.Field orientation="horizontal">
+              <Field.Field className="flex flex-row items-center gap-2 space-y-0">
                 <Checkbox
                   checked={!!formData.rememberMe}
                   onCheckedChange={(checked: boolean) => setFormData({ ...formData, rememberMe: checked })}
@@ -834,6 +873,19 @@ export function UnifiedAuthRenderer({
               </Button>
             )}
           </>
+        )}
+
+        {/* Sign-up link */}
+        {signInConfig.showSignUpLink !== false && (
+          <p className="text-center text-sm text-gray-600">
+            {locale.signIn?.noAccount || "Don't have an account?"}{' '}
+            <a 
+              href={signInConfig.signUpUrl || '/auth/signup'} 
+              className="font-medium text-primary hover:underline"
+            >
+              {locale.signIn?.signUpLink || locale.auth?.signUp || 'Sign up'}
+            </a>
+          </p>
         )}
       </div>
     );
@@ -984,7 +1036,7 @@ export function UnifiedAuthRenderer({
 
               {/* Terms checkbox */}
               {signUpConfig.showTermsCheckbox && Checkbox && (
-                <Field.Field orientation="horizontal">
+                <Field.Field className="flex flex-row items-center gap-2 space-y-0">
                 <Checkbox
                     checked={agreedToTerms}
                     onCheckedChange={(checked: boolean) => setAgreedToTerms(!!checked)}
@@ -1007,7 +1059,7 @@ export function UnifiedAuthRenderer({
           )}
 
           {mode === 'signin' && signInConfig.showRememberMe && Checkbox && (
-            <Field.Field orientation="horizontal">
+            <Field.Field className="flex flex-row items-center gap-2 space-y-0">
               <Checkbox
                 checked={!!formData.rememberMe}
                 onCheckedChange={(checked: boolean) => setFormData({ ...formData, rememberMe: checked })}
@@ -1027,8 +1079,8 @@ export function UnifiedAuthRenderer({
         </form>
       )}
 
-      {/* Magic Link */}
-      {authMethods.magicLink && (
+      {/* Magic Link - only for sign-in */}
+      {mode === 'signin' && authMethods.magicLink && (
         <>
           {(authMethods.emailPassword || authMethods.username) && Divider && (
             <Divider label={labels.or || 'or'} />
@@ -1114,8 +1166,8 @@ export function UnifiedAuthRenderer({
         </>
       )}
 
-      {/* Passkey always at bottom (regardless of socialFirst) */}
-      {authMethods.passkey && (
+      {/* Passkey always at bottom (regardless of socialFirst) - only for sign-in */}
+      {mode === 'signin' && authMethods.passkey && (
         <>
           {(authMethods.emailPassword || authMethods.username || authMethods.magicLink || authMethods.phone || authMethods.oauth) && Divider && (
             <Divider label={labels.or || 'or'} />
@@ -1132,6 +1184,30 @@ export function UnifiedAuthRenderer({
             <span>{labels.signInWithPasskey || 'Sign in with Passkey'}</span>
           </Button>
         </>
+      )}
+
+      {/* Sign-in/Sign-up link */}
+      {mode === 'signin' && signInConfig.showSignUpLink !== false && (
+        <p className="text-center text-sm text-gray-600">
+          {locale.signIn?.noAccount || "Don't have an account?"}{' '}
+          <a 
+            href={signInConfig.signUpUrl || '/auth/signup'} 
+            className="font-medium text-primary hover:underline"
+          >
+            {locale.signIn?.signUpLink || locale.auth?.signUp || 'Sign up'}
+          </a>
+        </p>
+      )}
+      {mode === 'signup' && signUpConfig.showSignInLink !== false && (
+        <p className="text-center text-sm text-gray-600">
+          {locale.signUp?.haveAccount || 'Already have an account?'}{' '}
+          <a 
+            href={signUpConfig.signInUrl || '/auth/signin'} 
+            className="font-medium text-primary hover:underline"
+          >
+            {locale.signUp?.signInLink || locale.auth?.signIn || 'Sign in'}
+          </a>
+        </p>
       )}
     </div>
   );

@@ -34,5 +34,6 @@ export {
   phoneAuthFlow,
   oauthSignInFlow,
   passwordResetFlow,
+  emailVerificationFlow,
 } from './configs';
 

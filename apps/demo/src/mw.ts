@@ -14,21 +14,15 @@ adapter.initialize({
 
 export const authMiddleware: NextProxy = createAuthMiddleware({
   adapter,
-  publicRoutes: ["/about", "/api/public/*"],
-  afterAuthRedirect: "/",
-  // Routes that don't require authentication
-//   publicRoutes: [
-//     "/",
-//     "/about",
-//     "/examples",
-//     "/examples/*",
-//     "/api/public/*",
-//   ],
-//   // Auth pages
-//   authRoutes: [
-//     "/auth/signin",
-//     "/auth/signup",
-//   ],
+  publicRoutes: ["/about", "/api/public/*", '/examples', '/examples/*', '/playground', '/'],
+  // Auth pages (accessible without login, redirect if authenticated)
+  authRoutes: [
+    "/auth/signin",
+    "/auth/signup",
+    "/auth/forgot-password",
+    "/auth/reset-password",
+    "/auth/verify-email",
+  ],
   // Session config - must match auth-config.tsx
   session: {
     password: process.env.SESSION_SECRET!,
@@ -42,5 +36,8 @@ export const authMiddleware: NextProxy = createAuthMiddleware({
   pages: {
     signIn: '/auth/signin',
     signUp: '/auth/signup',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    verifyEmail: '/auth/verify-email',
   },
 }) as unknown as NextProxy;

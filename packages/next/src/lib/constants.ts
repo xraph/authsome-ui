@@ -9,6 +9,9 @@ export const DEFAULT_PAGES = {
   signUp: '/auth/signup',
   error: '/auth/error',
   verify: '/auth/verify',
+  forgotPassword: '/auth/forgot-password',
+  resetPassword: '/auth/reset-password',
+  verifyEmail: '/auth/verify-email',
 } as const;
 
 export const DEFAULT_SESSION_CONFIG = {
@@ -22,7 +25,13 @@ export const DEFAULT_SESSION_CONFIG = {
 export const DEFAULT_AFTER_AUTH_REDIRECT = '/';
 export const DEFAULT_AFTER_SIGNOUT_REDIRECT = '/auth/signin';
 
-export const DEFAULT_AUTH_ROUTES = ['/auth/signin', '/auth/signup'];
+export const DEFAULT_AUTH_ROUTES = [
+  '/auth/signin', 
+  '/auth/signup',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+];
 
 export const DEFAULT_PUBLIC_ROUTES: string[] = [];
 

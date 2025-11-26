@@ -44,6 +44,20 @@ export default function ExamplesPage() {
       status: 'Ready',
     },
     {
+      title: 'Password Reset',
+      description: 'Complete forgot password and reset flow',
+      path: '/examples/password-reset',
+      status: 'New',
+      featured: true,
+    },
+    {
+      title: 'Email Verification',
+      description: 'Code and link-based email verification',
+      path: '/examples/email-verification',
+      status: 'New',
+      featured: true,
+    },
+    {
       title: 'Two-Factor Auth',
       description: 'TOTP, SMS, and email-based 2FA',
       path: '/examples/2fa',

@@ -173,6 +173,9 @@ export enum FlowConfigType {
   // Password management
   PASSWORD_RESET_FLOW = 'password_reset_flow',
   
+  // Email verification
+  EMAIL_VERIFICATION_FLOW = 'email_verification_flow',
+  
   // Custom
   CUSTOM = 'custom',
 }

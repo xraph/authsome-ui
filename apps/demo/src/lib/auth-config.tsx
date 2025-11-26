@@ -18,6 +18,7 @@ import type { AuthSomeAdapterConfig } from '@authsome/adapter-authsome';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Validation
 if (!process.env.NEXT_PUBLIC_AUTHSOME_API_URL) {
@@ -93,6 +94,7 @@ export const authConfig: NextAuthConfig = {
   uiComponents: {
     Input,
     Button,
+    Checkbox,
     Field: {
       Field: ({ children }: { children: React.ReactNode }) => (
         <div className="space-y-2">{children}</div>
@@ -106,6 +108,46 @@ export const authConfig: NextAuthConfig = {
       ),
     },
   },
+
+  rendererConfig: {
+    authMethods: {
+      emailPassword: true,
+      oauth: {
+        // providers: [OAuthProvider.GOOGLE, OAuthProvider.GITHUB],
+        providers: ['google', 'github', 'microsoft'],
+      },
+      magicLink: true,
+      passwordReset: true,
+      emailVerification: {
+        method: 'both', // Support both code and link verification
+      },
+    },
+    signIn: {
+      showRememberMe: true,
+      showForgotPassword: true,
+      forgotPasswordUrl: '/auth/forgot-password',
+    },
+    signUp: {
+      customFields: [
+        {
+          name: "role",
+          label: "Your Role",
+          type: "select",
+          required: true,
+          options: [
+            { value: "developer", label: "Developer" },
+            { value: "designer", label: "Designer" },
+            { value: "manager", label: "Product Manager" },
+            { value: "other", label: "Other" },
+          ],
+        },
+      ],
+      showTermsCheckbox: true,
+      termsText: "terms and conditions",
+      termsUrl: "/terms",
+    },
+    socialFirst: false,
+  },
   session: {
     password: process.env.SESSION_SECRET!,
     cookieName: 'authsome.session',
@@ -118,6 +160,9 @@ export const authConfig: NextAuthConfig = {
     signIn: '/auth/signin',
     signUp: '/auth/signup',
     error: '/auth/error',
+    forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
+    verifyEmail: '/auth/verify-email',
   },
   callbacks: {
     signIn: async (user, _session) => {

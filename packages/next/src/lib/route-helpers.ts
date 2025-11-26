@@ -182,6 +182,9 @@ export function createAuthMetadata() {
       signout: 'Sign Out',
       error: 'Authentication Error',
       verify: 'Verify Email',
+      'forgot-password': 'Forgot Password',
+      'reset-password': 'Reset Password',
+      'verify-email': 'Verify Email',
     };
 
     return {

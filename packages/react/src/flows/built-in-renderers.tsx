@@ -14,6 +14,8 @@ import { PhoneAuthRenderer, PhoneVerifyRenderer } from './renderers/PhoneAuthRen
 import { OAuthRenderer, OAuthCallbackRenderer } from './renderers/OAuthRenderer';
 import { PasskeyRenderer } from './renderers/PasskeyRenderer';
 import { MFARequiredRenderer, MFASelectMethodRenderer, MFAVerifyRenderer } from './renderers/MFARenderer';
+import { PasswordResetRequestRenderer, PasswordResetSentRenderer, PasswordResetConfirmRenderer } from './renderers/PasswordResetRenderer';
+import { EmailVerificationRequiredRenderer, EmailVerificationSentRenderer } from './renderers/EmailVerificationRenderer';
 import { SuccessRenderer } from './renderers/SuccessRenderer';
 import { ErrorRenderer } from './renderers/ErrorRenderer';
 
@@ -44,7 +46,7 @@ export function createBuiltInRenderers(uiComponents: UIComponents, rendererConfi
           mode="signin" 
         />
       ) : (
-        <EmailPasswordRenderer {...props} uiComponents={uiComponents} mode="signin" />
+        <EmailPasswordRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} mode="signin" />
       ),
     [FlowStep.EMAIL_PASSWORD_SIGN_UP]: (props: any) => 
       shouldUseUnified ? (
@@ -55,7 +57,7 @@ export function createBuiltInRenderers(uiComponents: UIComponents, rendererConfi
           mode="signup" 
         />
       ) : (
-        <EmailPasswordRenderer {...props} uiComponents={uiComponents} mode="signup" />
+        <EmailPasswordRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} mode="signup" />
       ),
 
     // OAuth flows
@@ -63,49 +65,68 @@ export function createBuiltInRenderers(uiComponents: UIComponents, rendererConfi
       <OAuthRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.OAUTH_CALLBACK]: (props: any) => (
-      <OAuthCallbackRenderer {...props} uiComponents={uiComponents} />
+      <OAuthCallbackRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Magic Link flows
     [FlowStep.MAGIC_LINK_REQUEST]: (props: any) => (
-      <MagicLinkRenderer {...props} uiComponents={uiComponents} />
+      <MagicLinkRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.MAGIC_LINK_SENT]: (props: any) => (
-      <MagicLinkSentRenderer {...props} uiComponents={uiComponents} />
+      <MagicLinkSentRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Phone flows
     [FlowStep.PHONE_REQUEST]: (props: any) => (
-      <PhoneAuthRenderer {...props} uiComponents={uiComponents} />
+      <PhoneAuthRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.PHONE_VERIFY]: (props: any) => (
-      <PhoneVerifyRenderer {...props} uiComponents={uiComponents} />
+      <PhoneVerifyRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Passkey
     [FlowStep.PASSKEY_AUTHENTICATE]: (props: any) => (
-      <PasskeyRenderer {...props} uiComponents={uiComponents} />
+      <PasskeyRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // MFA flows
     [FlowStep.MFA_REQUIRED]: (props: any) => (
-      <MFARequiredRenderer {...props} uiComponents={uiComponents} />
+      <MFARequiredRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.MFA_SELECT_METHOD]: (props: any) => (
-      <MFASelectMethodRenderer {...props} uiComponents={uiComponents} />
+      <MFASelectMethodRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
     [FlowStep.MFA_VERIFY]: (props: any) => (
-      <MFAVerifyRenderer {...props} uiComponents={uiComponents} />
+      <MFAVerifyRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+
+    // Password Reset flows
+    [FlowStep.PASSWORD_RESET_REQUEST]: (props: any) => (
+      <PasswordResetRequestRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.PASSWORD_RESET_SENT]: (props: any) => (
+      <PasswordResetSentRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.PASSWORD_RESET_CONFIRM]: (props: any) => (
+      <PasswordResetConfirmRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+
+    // Email Verification flows
+    [FlowStep.EMAIL_VERIFICATION_REQUIRED]: (props: any) => (
+      <EmailVerificationRequiredRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.EMAIL_VERIFICATION_SENT]: (props: any) => (
+      <EmailVerificationSentRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Success
     [FlowStep.SUCCESS]: (props: any) => (
-      <SuccessRenderer {...props} uiComponents={uiComponents} />
+      <SuccessRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Error
     [FlowStep.ERROR]: (props: any) => (
-      <ErrorRenderer {...props} uiComponents={uiComponents} />
+      <ErrorRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
   };
 }

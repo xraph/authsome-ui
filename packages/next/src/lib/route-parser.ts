@@ -7,7 +7,7 @@ import type { AuthRoute, ParsedAuthRoute } from '../types';
 /**
  * Valid auth route types
  */
-const VALID_ROUTES: AuthRoute[] = ['signin', 'signup', 'callback', 'signout', 'error', 'verify'];
+const VALID_ROUTES: AuthRoute[] = ['signin', 'signup', 'callback', 'signout', 'error', 'verify', 'forgot-password', 'reset-password', 'verify-email'];
 
 /**
  * Parse auth route segments from catch-all route
