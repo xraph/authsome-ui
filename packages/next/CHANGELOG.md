@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.11](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.10...ui-next-v0.1.11) (2025-11-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.6
+    * @authsome/ui-react bumped to 0.1.10
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.6
+    * @authsome/ui-react bumped to 0.1.10
+
 ## [0.1.10](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.9...ui-next-v0.1.10) (2025-11-26)
 
 

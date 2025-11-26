@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.10](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.9...ui-react-v0.1.10) (2025-11-26)
+
+
+### Features
+
+* enhance signup form with dynamic fields and ordering ([a8b69a7](https://github.com/xraph/authsome-ui/commit/a8b69a79c00c371195ae7305f9902222e3f3c74d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.6
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.6
+
 ## [0.1.9](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.8...ui-react-v0.1.9) (2025-11-26)
 
 

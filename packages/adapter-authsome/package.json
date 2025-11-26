@@ -1,6 +1,6 @@
 {
   "name": "@authsome/adapter-authsome",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "AuthSome adapter for AuthSome UI - uses official @authsome/client v0.0.2+ SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

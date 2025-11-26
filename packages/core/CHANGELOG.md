@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.5...ui-core-v0.1.6) (2025-11-26)
+
+
+### Features
+
+* enhance signup form with dynamic fields and ordering ([a8b69a7](https://github.com/xraph/authsome-ui/commit/a8b69a79c00c371195ae7305f9902222e3f3c74d))
+
 ## [0.1.5](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.4...ui-core-v0.1.5) (2025-11-26)
 
 
