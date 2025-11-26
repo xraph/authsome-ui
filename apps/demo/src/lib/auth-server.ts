@@ -66,7 +66,7 @@ export const authServer = createServerAuthClient({
   adapter,
   session: {
     password: process.env.SESSION_SECRET,
-    cookieName: 'authsome_session',
+    cookieName: 'authsome.session', // Must match middleware and client config
     maxAge: 2592000, // 30 days
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

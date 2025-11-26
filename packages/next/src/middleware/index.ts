@@ -14,6 +14,8 @@ export {
 
 export {
   getSessionFromRequest,
+  getSessionFromAdapter,
+  createSessionCookie,
   isAuthenticated,
 } from './edge-session';
 

@@ -4,7 +4,7 @@
  */
 
 import type { NextRequest } from 'next/server';
-import { unsealData } from 'iron-session';
+import { unsealData, sealData } from 'iron-session';
 import type { SessionConfig, SessionData } from '../types';
 import { DEFAULT_SESSION_CONFIG, MIN_PASSWORD_LENGTH, ERROR_MESSAGES } from '../lib/constants';
 import { AuthProvider, RequestContext, CookieData } from '@authsome/ui-core';
@@ -48,6 +48,45 @@ function isSessionExpired(sessionData: SessionData | null): boolean {
   }
 
   return Date.now() >= sessionData.expiresAt;
+}
+
+/**
+ * Create an encrypted session cookie for Edge Runtime
+ * 
+ * Note: This function is for adapters that use local iron-session storage
+ * (e.g., generic adapters). For adapters like AuthSome that use direct
+ * API calls with cookie-based authentication, the backend manages session
+ * cookies and this function is not needed.
+ * 
+ * @param sessionData - Session data to encrypt
+ * @param config - Session configuration
+ * @returns CookieData to set on response
+ */
+export async function createSessionCookie(
+  sessionData: SessionData,
+  config?: SessionConfig
+): Promise<CookieData> {
+  const ironConfig = getIronSessionConfig(config);
+  const maxAge = config?.maxAge || DEFAULT_SESSION_CONFIG.maxAge;
+  
+  // Encrypt the session data
+  const sealedData = await sealData(sessionData, {
+    password: ironConfig.password,
+    ttl: ironConfig.ttl,
+  });
+
+  return {
+    name: ironConfig.cookieName,
+    value: sealedData,
+    options: {
+      httpOnly: true,
+      secure: config?.secure ?? DEFAULT_SESSION_CONFIG.secure,
+      sameSite: config?.sameSite || DEFAULT_SESSION_CONFIG.sameSite,
+      path: config?.path || DEFAULT_SESSION_CONFIG.path,
+      maxAge: maxAge,
+      ...(config?.domain && { domain: config.domain }),
+    },
+  };
 }
 
 /**
@@ -99,9 +138,19 @@ export async function getSessionFromRequest(
 /**
  * Get session data from adapter with context support
  * 
+ * This function:
+ * 1. Sets request context on the adapter (cookies, headers from Next.js request)
+ * 2. Fetches session data from the backend via adapter API call
+ * 3. Returns cookies from the adapter that should be set on the response
+ * 
+ * Note: For adapters like AuthSome that use direct API calls with cookie-based
+ * authentication, the backend manages session cookies. This function simply
+ * forwards cookies from the request to the backend and returns any cookies
+ * the backend sends back (e.g., refreshed session tokens).
+ * 
  * @param adapter - Auth provider adapter
  * @param request - Next.js request object
- * @param config - Session configuration
+ * @param _config - Session configuration (unused for cookie-based adapters)
  * @returns Session data and cookies to set, or null
  */
 export async function getSessionFromAdapter(
@@ -123,7 +172,7 @@ export async function getSessionFromAdapter(
       context.headers![key] = value;
     });
 
-    // Extract cookies
+    // Extract cookies - these are forwarded to the backend API
     request.cookies.getAll().forEach(cookie => {
       context.cookies![cookie.name] = cookie.value;
     });
@@ -133,10 +182,11 @@ export async function getSessionFromAdapter(
       adapter.setContext(context);
     }
 
-    // Get session data
+    // Get session data from adapter (API call to backend)
     const sessionData = await adapter.getCurrentSessionData();
 
-    // Get cookies that should be set
+    // Get cookies from adapter that should be set on the response
+    // These are cookies returned by the backend (e.g., refreshed session tokens)
     const cookies = adapter.getCookies?.() || [];
 
     // Clear context

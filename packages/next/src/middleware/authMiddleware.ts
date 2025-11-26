@@ -86,16 +86,13 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
     }
 
     // Get session from cookie (Edge Runtime compatible)
-    let session;
+    let session: { sessionData: SessionData | null; cookies: CookieData[] } | null = null;
     try {
-      const sessionData = await getSessionFromAdapter(config.adapter, request, config.session);
-      session = sessionData;
+      session = await getSessionFromAdapter(config.adapter, request, config.session);
     } catch (error) {
       console.error('Middleware session error:', error);
       session = null;
     }
-
-    console.log('session ===> ', session);
 
     // Skip auth routes (let the route handler deal with them)
     if (isAuthRoute(pathname, basePath) && !session?.sessionData) {
@@ -111,7 +108,14 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
       // Add callback URL to redirect back after sign in
       redirectUrl.searchParams.set('callbackUrl', pathname);
       
-      return NextResponse.redirect(redirectUrl);
+      const response = NextResponse.redirect(redirectUrl);
+      
+      // Apply any cookies from adapter even on redirect
+      if (session?.cookies && session.cookies.length > 0) {
+        applyCookiesToResponse(response, session.cookies);
+      }
+      
+      return response;
     }
 
     // User is authenticated
@@ -119,11 +123,26 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
     if (isConfiguredAuthRoute(pathname, authRoutes)) {
       // Redirect away from auth pages
       const redirectUrl = new URL(afterAuthRedirect, request.url);
-      return NextResponse.redirect(redirectUrl);
+      const response = NextResponse.redirect(redirectUrl);
+      
+      // Apply any cookies from adapter even on redirect
+      if (session?.cookies && session.cookies.length > 0) {
+        applyCookiesToResponse(response, session.cookies);
+      }
+      
+      return response;
     }
 
-    // Allow request to proceed
-    return NextResponse.next();
+    // Allow request to proceed and apply any cookies from the adapter
+    // This is critical for session refresh - without this, refreshed tokens are lost
+    const response = NextResponse.next();
+    
+    // Apply cookies from adapter to response (e.g., refreshed session tokens)
+    if (session?.cookies && session.cookies.length > 0) {
+      applyCookiesToResponse(response, session.cookies);
+    }
+    
+    return response;
   };
 }
 
