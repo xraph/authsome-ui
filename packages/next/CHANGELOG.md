@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.10](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.9...ui-next-v0.1.10) (2025-11-26)
+
+
+### Features
+
+* enhance authentication flows with email verification and password reset ([1c32e7f](https://github.com/xraph/authsome-ui/commit/1c32e7f5d02d5b3c4551c8dc76156eac9ee6ab57))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.5
+    * @authsome/ui-react bumped to 0.1.9
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.5
+    * @authsome/ui-react bumped to 0.1.9
+
 ## [0.1.9](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.8...ui-next-v0.1.9) (2025-11-24)
 
 

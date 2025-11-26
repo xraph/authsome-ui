@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.4...ui-core-v0.1.5) (2025-11-26)
+
+
+### Features
+
+* enhance authentication flows with email verification and password reset ([1c32e7f](https://github.com/xraph/authsome-ui/commit/1c32e7f5d02d5b3c4551c8dc76156eac9ee6ab57))
+
 ## [0.1.4](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.3...ui-core-v0.1.4) (2025-11-23)
 
 
