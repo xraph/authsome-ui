@@ -889,7 +889,7 @@ export function UnifiedAuthRenderer({
       case 'checkbox':
         if (!Checkbox) return null;
         return (
-          <Field.Field key={field.name} className="flex-1 min-w-0">
+          <Field.Field key={field.name} orientation="horizontal" className="flex-1 min-w-0">
             <Checkbox
               id={fieldId}
               checked={!!value}
@@ -1057,7 +1057,7 @@ export function UnifiedAuthRenderer({
             </Field.Field>
 
             {signInConfig.showRememberMe && Checkbox && (
-              <Field.Field className="flex flex-row items-center gap-2 space-y-0">
+              <Field.Field orientation="horizontal" className="gap-2 space-y-0">
                 <Checkbox
                   checked={!!formData.rememberMe}
                   onCheckedChange={(checked: boolean) => setFormData({ ...formData, rememberMe: checked })}
@@ -1276,7 +1276,7 @@ export function UnifiedAuthRenderer({
           )}
 
           {mode === 'signin' && signInConfig.showRememberMe && Checkbox && (
-            <Field.Field className="flex flex-row items-center gap-2 space-y-0">
+            <Field.Field orientation="horizontal" className="gap-2 space-y-0">
               <Checkbox
                 checked={!!formData.rememberMe}
                 onCheckedChange={(checked: boolean) => setFormData({ ...formData, rememberMe: checked })}

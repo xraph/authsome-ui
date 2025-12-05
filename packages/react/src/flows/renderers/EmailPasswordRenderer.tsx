@@ -304,7 +304,7 @@ export function EmailPasswordRenderer({
       case 'checkbox':
         if (!Checkbox) return null;
         return (
-          <Field.Field key={field.name} className="flex-1 min-w-0">
+          <Field.Field key={field.name} className="flex-1 min-w-0" orientation="horizontal">
             <Checkbox
               id={fieldId}
               checked={!!value}
