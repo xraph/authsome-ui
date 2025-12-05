@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.10...ui-react-v0.1.11) (2025-12-05)
+
+
+### Bug Fixes
+
+* update Field.Field orientation in EmailPasswordRenderer and UnifiedAuthRenderer ([7f8981d](https://github.com/xraph/authsome-ui/commit/7f8981d9ced8172f995633ffb11e52884e88702a))
+
 ## [0.1.10](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.9...ui-react-v0.1.10) (2025-11-26)
 
 

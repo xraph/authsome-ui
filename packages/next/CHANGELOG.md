@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.12](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.11...ui-next-v0.1.12) (2025-12-05)
+
+
+### Bug Fixes
+
+* update session cookie naming and enhance session handling in middleware ([0c38371](https://github.com/xraph/authsome-ui/commit/0c38371b70c98825d6b92b394a464f7726f68740))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-react bumped to 0.1.11
+  * peerDependencies
+    * @authsome/ui-react bumped to 0.1.11
+
 ## [0.1.11](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.10...ui-next-v0.1.11) (2025-11-26)
 
 
