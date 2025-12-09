@@ -1,6 +1,14 @@
 /**
  * Cookie utilities for encrypted session storage
  * Uses iron-session for secure cookie encryption
+ * 
+ * NOTE: These utilities are only needed when session.strategy = 'cookie'.
+ * For adapter-managed sessions (strategy = 'adapter'), the backend handles
+ * all cookie management and these functions should not be called.
+ * 
+ * When to use each strategy:
+ * - 'adapter': Backend manages sessions (e.g., AuthSome) - cookies forwarded from adapter
+ * - 'cookie': Local iron-session encrypted cookies - for adapters without backend session management
  */
 
 import { getIronSession, IronSession } from 'iron-session';

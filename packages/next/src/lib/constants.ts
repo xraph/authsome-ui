@@ -15,6 +15,7 @@ export const DEFAULT_PAGES = {
 } as const;
 
 export const DEFAULT_SESSION_CONFIG = {
+  strategy: 'adapter' as const, // Default to adapter-managed
   cookieName: 'authsome.session',
   maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
   secure: process.env.NODE_ENV === 'production',

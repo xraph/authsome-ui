@@ -13,6 +13,7 @@ import {
   refreshSessionCookie,
   isSessionExpired,
 } from './cookies';
+import { DEFAULT_SESSION_CONFIG } from '../lib/constants';
 
 /**
  * Type for the cookie store returned by Next.js cookies()
@@ -87,6 +88,7 @@ export async function getServerSession(
   try {
     // Get or create cookie store
     const store = cookieStore || await cookies();
+    const strategy = config?.strategy || DEFAULT_SESSION_CONFIG.strategy;
     
     // Set adapter context with all cookies for API calls
     setAdapterContext(adapter, store);
@@ -95,39 +97,42 @@ export async function getServerSession(
       // Get session data from adapter (like middleware does)
       const sessionData = await adapter.getCurrentSessionData();
 
-    if (!sessionData) {
+      if (!sessionData) {
         clearAdapterContext(adapter);
-      return null;
-    }
+        return null;
+      }
 
-    if (isSessionExpired(sessionData)) {
-        await deleteSessionCookie(config, store);
-        clearAdapterContext(adapter);
-      return null;
-    }
+      // Only manage iron-session cookies if strategy is 'cookie'
+      if (strategy === 'cookie') {
+        if (isSessionExpired(sessionData)) {
+          await deleteSessionCookie(config, store);
+          clearAdapterContext(adapter);
+          return null;
+        }
+        // Only write cookie in cookie mode (NOT on every read)
+        const existingSession = await getSessionData(config, store);
+        if (!existingSession) {
+          await setServerSession(sessionData.user, sessionData.session, config, store);
+        }
+      }
 
-      // Store/update session in cookie
-      await setServerSession(sessionData.user, sessionData.session, config, store);
-      
       clearAdapterContext(adapter);
       return sessionData.session;
     } catch (error) {
-      // If adapter call fails, fall back to reading from cookie
+      // Fallback to cookie only if strategy is 'cookie'
       console.error('Error getting session from adapter, falling back to cookie:', error);
       clearAdapterContext(adapter);
       
-      const sessionData = await getSessionData(config, store);
+      if (strategy === 'cookie') {
+        const sessionData = await getSessionData(config, store);
+        if (!sessionData || isSessionExpired(sessionData)) {
+          if (sessionData) await deleteSessionCookie(config, store);
+          return null;
+        }
+        return sessionData.session;
+      }
       
-      if (!sessionData) {
-        return null;
-      }
-
-      if (isSessionExpired(sessionData)) {
-        await deleteSessionCookie(config, store);
-        return null;
-      }
-
-      return sessionData.session;
+      return null;
     }
   } catch (error) {
     console.error('Error getting server session:', error);
@@ -184,6 +189,7 @@ export async function getServerUser(
   try {
     // Get or create cookie store
     const store = cookieStore || await cookies();
+    const strategy = config?.strategy || DEFAULT_SESSION_CONFIG.strategy;
     
     console.log('[getServerUser] Cookie store obtained, cookies count:', store.getAll().length);
     
@@ -201,31 +207,32 @@ export async function getServerUser(
         return null;
       }
 
-      if (isSessionExpired(sessionData)) {
-        await deleteSessionCookie(config, store);
-        clearAdapterContext(adapter);
-        return null;
+      // Only manage iron-session cookies if strategy is 'cookie'
+      if (strategy === 'cookie') {
+        if (isSessionExpired(sessionData)) {
+          await deleteSessionCookie(config, store);
+          clearAdapterContext(adapter);
+          return null;
+        }
       }
 
       clearAdapterContext(adapter);
       return sessionData.user;
     } catch (error) {
-      // If adapter call fails, fall back to reading from cookie
+      // Fallback to cookie only if strategy is 'cookie'
       console.error('Error getting user from adapter, falling back to cookie:', error);
       clearAdapterContext(adapter);
       
-      const sessionData = await getSessionData(config, store);
-
-    if (!sessionData) {
+      if (strategy === 'cookie') {
+        const sessionData = await getSessionData(config, store);
+        if (!sessionData || isSessionExpired(sessionData)) {
+          if (sessionData) await deleteSessionCookie(config, store);
+          return null;
+        }
+        return sessionData.user;
+      }
+      
       return null;
-    }
-
-    if (isSessionExpired(sessionData)) {
-        await deleteSessionCookie(config, store);
-      return null;
-    }
-
-    return sessionData.user;
     }
   } catch (error) {
     console.error('Error getting server user:', error);
@@ -251,11 +258,14 @@ export async function refreshServerSession(
   try {
     // Get or create cookie store
     const store = cookieStore || await cookies();
+    const strategy = config?.strategy || DEFAULT_SESSION_CONFIG.strategy;
     
-    const sessionData = await getSessionData(config, store);
-
-    if (!sessionData) {
-      return null;
+    // Only check cookie session in 'cookie' mode
+    if (strategy === 'cookie') {
+      const sessionData = await getSessionData(config, store);
+      if (!sessionData) {
+        return null;
+      }
     }
 
     // Set adapter context with all cookies for API calls
@@ -267,21 +277,29 @@ export async function refreshServerSession(
       const currentUser = await adapter.getCurrentUser();
 
       if (refreshedSession && currentUser) {
-        await setServerSession(currentUser, refreshedSession, config, store);
+        // Only write to cookie in 'cookie' mode
+        if (strategy === 'cookie') {
+          await setServerSession(currentUser, refreshedSession, config, store);
+        }
         clearAdapterContext(adapter);
         return refreshedSession;
       }
     } catch (error) {
-      // If refresh fails, check if current session is still valid
-      if (!isSessionExpired(sessionData)) {
-        await refreshSessionCookie(config, store);
-        clearAdapterContext(adapter);
-        return sessionData.session;
+      // If refresh fails in 'cookie' mode, check if current session is still valid
+      if (strategy === 'cookie') {
+        const sessionData = await getSessionData(config, store);
+        if (sessionData && !isSessionExpired(sessionData)) {
+          await refreshSessionCookie(config, store);
+          clearAdapterContext(adapter);
+          return sessionData.session;
+        }
       }
     }
 
     // Session could not be refreshed
-    await clearServerSession(config, store);
+    if (strategy === 'cookie') {
+      await clearServerSession(config, store);
+    }
     clearAdapterContext(adapter);
     return null;
   } catch (error) {
@@ -321,13 +339,36 @@ export async function isAuthenticated(
  * @throws Error if not authenticated
  */
 export async function requireAuth(
-  _adapter: AuthProvider,
+  adapter: AuthProvider,
   config?: SessionConfig,
   cookieStore?: CookieStore
 ): Promise<{ user: User; session: Session }> {
   // Get or create cookie store
   const store = cookieStore || await cookies();
+  const strategy = config?.strategy || DEFAULT_SESSION_CONFIG.strategy;
   
+  // In 'adapter' mode, get session from adapter directly
+  if (strategy === 'adapter') {
+    setAdapterContext(adapter, store);
+    try {
+      const sessionData = await adapter.getCurrentSessionData();
+      clearAdapterContext(adapter);
+      
+      if (!sessionData) {
+        throw new Error('Authentication required');
+      }
+      
+      return {
+        user: sessionData.user,
+        session: sessionData.session,
+      };
+    } catch (error) {
+      clearAdapterContext(adapter);
+      throw new Error('Authentication required');
+    }
+  }
+  
+  // In 'cookie' mode, check cookie storage
   const sessionData = await getSessionData(config, store);
 
   if (!sessionData) {

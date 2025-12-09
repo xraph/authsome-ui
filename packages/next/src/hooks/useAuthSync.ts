@@ -41,7 +41,7 @@ const getSessionAction = async () => {
 export function useAuthSync(options: AuthSyncOptions = {}) {
   const {
     pollInterval = DEFAULT_POLL_INTERVAL,
-    enablePolling = true,
+    enablePolling = false, // Changed from true to false - disabled for adapter-managed sessions
     onSessionChange,
     onSessionExpire,
   } = options;

@@ -34,6 +34,14 @@ export interface ParsedAuthRoute {
  */
 export interface SessionConfig {
   /**
+   * Session storage strategy
+   * - 'adapter': Adapter manages all cookies (e.g., AuthSome)
+   * - 'cookie': Use local iron-session encrypted cookies
+   * @default 'adapter'
+   */
+  strategy?: 'adapter' | 'cookie';
+
+  /**
    * Cookie name for session storage
    * @default 'authsome.session'
    */
@@ -378,7 +386,7 @@ export interface AuthSyncOptions {
 
   /**
    * Enable session polling
-   * @default true
+   * @default false (disabled for adapter-managed sessions)
    */
   enablePolling?: boolean;
 
