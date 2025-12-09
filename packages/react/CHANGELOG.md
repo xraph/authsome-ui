@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.11...ui-react-v0.1.12) (2025-12-09)
+
+
+### Features
+
+* enhance session management with new storage strategy and improved cookie handling ([2196443](https://github.com/xraph/authsome-ui/commit/21964432c282b26c04d075014d7e9d62bcf92583))
+
 ## [0.1.11](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.10...ui-react-v0.1.11) (2025-12-05)
 
 
