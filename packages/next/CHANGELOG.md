@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.13](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.12...ui-next-v0.1.13) (2025-12-09)
+
+
+### Features
+
+* enhance session management with new storage strategy and improved cookie handling ([2196443](https://github.com/xraph/authsome-ui/commit/21964432c282b26c04d075014d7e9d62bcf92583))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-react bumped to 0.1.12
+  * peerDependencies
+    * @authsome/ui-react bumped to 0.1.12
+
 ## [0.1.12](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.11...ui-next-v0.1.12) (2025-12-05)
 
 
