@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.10](https://github.com/xraph/authsome-ui/compare/adapter-clerk-v0.1.9...adapter-clerk-v0.1.10) (2025-12-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.7
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.7
+
 ## [0.1.9](https://github.com/xraph/authsome-ui/compare/adapter-clerk-v0.1.8...adapter-clerk-v0.1.9) (2025-11-26)
 
 
