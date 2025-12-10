@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.13](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.12...ui-react-v0.1.13) (2025-12-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.7
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.7
+
 ## [0.1.12](https://github.com/xraph/authsome-ui/compare/ui-react-v0.1.11...ui-react-v0.1.12) (2025-12-09)
 
 
