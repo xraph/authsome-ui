@@ -526,8 +526,11 @@ export class AuthClient {
         session,
       });
     } catch (error) {
-      // Session refresh failed, sign out
-      await this.signOut();
+      // Session refresh failed - log error but DON'T sign out
+      // In cookie-based auth, the backend manages the session
+      // A failed refresh might be temporary (network error, etc.)
+      console.warn('[AuthClient] Session refresh failed:', error);
+      // Backend session cookie may still be valid - don't destroy it
     }
   }
 

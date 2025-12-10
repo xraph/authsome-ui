@@ -141,6 +141,7 @@ export class AuthSomeAdapter implements AuthProvider {
   // Edge runtime context support  
   private _context: RequestContext | null = null;
   private _cookies: CookieData[] = [];
+  private originalFetch: typeof fetch | null = null;
 
   /**
    * Get the underlying AuthsomeClient instance
@@ -782,6 +783,9 @@ export class AuthSomeAdapter implements AuthProvider {
       this.client.setGlobalHeaders(headersToSet, false);
       console.info('[AuthSome Adapter] Set global headers, Cookie included:', !!headersToSet['Cookie']);
     }
+    
+    // Install fetch interceptor to capture Set-Cookie headers from responses
+    this.installFetchInterceptor();
   }
 
   getCookies(): CookieData[] {
@@ -797,6 +801,106 @@ export class AuthSomeAdapter implements AuthProvider {
       // This clears any headers that were set from the context
       this.client.setGlobalHeaders({}, false);
     }
+    
+    // Restore original fetch if it was intercepted
+    this.uninstallFetchInterceptor();
+  }
+
+  /**
+   * Install fetch interceptor to capture Set-Cookie headers
+   * Only installed when setContext is called (i.e., in middleware/server context)
+   */
+  private installFetchInterceptor(): void {
+    if (typeof globalThis.fetch === 'undefined') {
+      return; // No fetch to intercept
+    }
+    
+    // Save original fetch if not already saved
+    if (!this.originalFetch) {
+      this.originalFetch = globalThis.fetch;
+    }
+    
+    // Create interceptor that captures Set-Cookie headers
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    globalThis.fetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
+      const response = await self.originalFetch!(...args);
+      
+      // Capture Set-Cookie headers from response
+      const setCookieHeader = response.headers.get('set-cookie');
+      if (setCookieHeader) {
+        self.extractCookiesFromSetCookieHeader(setCookieHeader);
+      }
+      
+      return response;
+    };
+  }
+
+  /**
+   * Restore original fetch
+   */
+  private uninstallFetchInterceptor(): void {
+    if (this.originalFetch) {
+      globalThis.fetch = this.originalFetch;
+      this.originalFetch = null;
+    }
+  }
+
+  /**
+   * Extract cookies from Set-Cookie header and store in _cookies array
+   */
+  private extractCookiesFromSetCookieHeader(setCookieHeader: string): void {
+    // Split by comma but be careful about dates (e.g., "Expires=Wed, 21 Oct 2015")
+    // For simplicity, we'll parse the first cookie directive
+    const cookieParts = setCookieHeader.split(';').map(p => p.trim());
+    if (cookieParts.length === 0) return;
+    
+    const [nameValue] = cookieParts;
+    const [name, value] = nameValue.split('=');
+    if (!name || value === undefined) return;
+    
+    const cookieData: CookieData = { name, value };
+    const options: CookieData['options'] = {};
+    
+    // Parse cookie attributes
+    for (let i = 1; i < cookieParts.length; i++) {
+      const part = cookieParts[i];
+      const lowerPart = part.toLowerCase();
+      
+      if (lowerPart === 'httponly') {
+        options.httpOnly = true;
+      } else if (lowerPart === 'secure') {
+        options.secure = true;
+      } else if (lowerPart.startsWith('path=')) {
+        options.path = part.substring(5);
+      } else if (lowerPart.startsWith('domain=')) {
+        options.domain = part.substring(7);
+      } else if (lowerPart.startsWith('max-age=')) {
+        const maxAge = parseInt(part.substring(8), 10);
+        if (!isNaN(maxAge)) {
+          options.maxAge = maxAge;
+        }
+      } else if (lowerPart.startsWith('samesite=')) {
+        const sameSiteValue = lowerPart.substring(9) as 'strict' | 'lax' | 'none';
+        if (['strict', 'lax', 'none'].includes(sameSiteValue)) {
+          options.sameSite = sameSiteValue;
+        }
+      }
+    }
+    
+    if (Object.keys(options).length > 0) {
+      cookieData.options = options;
+    }
+    
+    // Add to cookies array (replace if same name exists)
+    const existingIndex = this._cookies.findIndex(c => c.name === name);
+    if (existingIndex >= 0) {
+      this._cookies[existingIndex] = cookieData;
+    } else {
+      this._cookies.push(cookieData);
+    }
+    
+    console.info('[AuthSome Adapter] Captured cookie:', name);
   }
 
   // Error handling
