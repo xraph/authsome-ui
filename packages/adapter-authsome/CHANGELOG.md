@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.12](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.11...adapter-authsome-v0.1.12) (2025-12-29)
+
+
+### Features
+
+* enhance OAuth flow with email verification and session management improvements ([8b16821](https://github.com/xraph/authsome-ui/commit/8b16821946445aa69c52c86c3aa349ad8da9c307))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.8
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.8
+
 ## [0.1.11](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.10...adapter-authsome-v0.1.11) (2025-12-10)
 
 
