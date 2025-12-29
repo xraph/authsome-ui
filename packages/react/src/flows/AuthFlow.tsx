@@ -33,8 +33,13 @@ export interface AuthFlowProps {
   
   /**
    * Error component
+   * Receives error object and optional navigation callbacks
    */
-  errorComponent?: React.ComponentType<{ error: any }>;
+  errorComponent?: React.ComponentType<{ 
+    error: any;
+    onBack?: () => void;
+    onRetry?: () => void;
+  }>;
   
   /**
    * Success component
@@ -111,7 +116,13 @@ export function AuthFlow({
   if (currentStep === FlowStep.ERROR && state.error) {
     const ErrorRenderer = ErrorComponent || allRenderers[FlowStep.ERROR];
     if (ErrorRenderer) {
-      return <ErrorRenderer error={state.error} />;
+      return (
+        <ErrorRenderer 
+          error={state.error} 
+          onBack={back}
+          onRetry={() => back()}
+        />
+      );
     }
   }
 

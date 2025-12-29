@@ -11,8 +11,27 @@ import type {
   FlowState,
   FlowEvent,
   Organization,
+  OrganizationMembership,
   AuthLocale,
   DeepPartial,
+  FieldDefinition,
+  RequestContext,
+  CookieData,
+  SendVerificationEmailRequest,
+  VerifyEmailRequest,
+  ResendVerificationRequest,
+  MFAFactor,
+  EnrollMFAFactorRequest,
+  VerifyMFAFactorRequest,
+  MFAChallengeRequest,
+  MFAChallengeResponse,
+  Device,
+  SessionData,
+  User,
+  Session,
+  AuthError,
+  ListSessionsOptions,
+  ListSessionsResponse,
 } from '@authsome/ui-core';
 import type { UIComponents } from '../flows/ui-components';
 import type { RendererConfig } from '../flows/renderer-config';
@@ -100,9 +119,50 @@ export interface AuthContextValue extends AuthStateContext {
   getOrganizations?: () => Promise<Organization[]>;
   getActiveOrganization?: () => Promise<Organization | null>;
   setActiveOrganization?: (orgId: string) => Promise<void>;
+  getOrganizationMemberships?: () => Promise<OrganizationMembership[]>;
   organizations?: Organization[];
   activeOrganization?: Organization | null;
   supportsOrganizations?: boolean;
+  
+  // Dynamic signup fields (adapter-specific)
+  getSignupFields?: () => Promise<FieldDefinition[]>;
+  
+  // Edge runtime context (adapter-specific)
+  setContext?: (context: RequestContext) => void;
+  getCookies?: () => CookieData[];
+  clearContext?: () => void;
+  
+  // Email verification (adapter-specific)
+  sendVerificationEmail?: (request: SendVerificationEmailRequest) => Promise<void>;
+  verifyEmail?: (request: VerifyEmailRequest) => Promise<void>;
+  resendVerificationEmail?: (request: ResendVerificationRequest) => Promise<void>;
+  
+  // Advanced MFA (adapter-specific)
+  enrollMFAFactor?: (request: EnrollMFAFactorRequest) => Promise<MFAFactor>;
+  listMFAFactors?: () => Promise<MFAFactor[]>;
+  getMFAFactor?: (factorId: string) => Promise<MFAFactor>;
+  deleteMFAFactor?: (factorId: string) => Promise<void>;
+  verifyMFAFactor?: (request: VerifyMFAFactorRequest) => Promise<void>;
+  initiateMFAChallenge?: (request: MFAChallengeRequest) => Promise<MFAChallengeResponse>;
+  getMFAStatus?: () => Promise<{ enabled: boolean; factors: MFAFactor[] }>;
+  
+  // Device management (adapter-specific)
+  listDevices?: () => Promise<Device[]>;
+  revokeDevice?: (deviceId: string) => Promise<void>;
+  trustDevice?: (deviceId: string, name?: string) => Promise<void>;
+  listTrustedDevices?: () => Promise<Device[]>;
+  revokeTrustedDevice?: (deviceId: string) => Promise<void>;
+  
+  // Session management (adapter-specific)
+  listSessions?: (options?: ListSessionsOptions) => Promise<ListSessionsResponse>;
+  revokeSession?: (sessionId: string) => Promise<void>;
+  revokeAllSessions?: () => Promise<void>;
+  
+  // Direct adapter access
+  getCurrentUser?: () => Promise<User | null>;
+  getCurrentSession?: () => Promise<Session | null>;
+  getCurrentSessionData?: () => Promise<SessionData | null>;
+  normalizeError?: (error: unknown) => AuthError;
 }
 
 /**
@@ -405,9 +465,50 @@ export function AuthProvider({
       getOrganizations: client.supportsOrganizations() ? getOrganizationsWrapped : undefined,
       getActiveOrganization: client.supportsOrganizations() ? getActiveOrganizationWrapped : undefined,
       setActiveOrganization: client.supportsOrganizations() ? setActiveOrganizationWrapped : undefined,
+      getOrganizationMemberships: client.getOrganizationMemberships?.bind(client),
       organizations,
       activeOrganization,
       supportsOrganizations: client.supportsOrganizations(),
+      
+      // Dynamic signup fields (adapter-specific)
+      getSignupFields: client.adapter?.getSignupFields?.bind(client.adapter),
+      
+      // Edge runtime context (adapter-specific)
+      setContext: client.adapter?.setContext?.bind(client.adapter),
+      getCookies: client.adapter?.getCookies?.bind(client.adapter),
+      clearContext: client.adapter?.clearContext?.bind(client.adapter),
+      
+      // Email verification (adapter-specific)
+      sendVerificationEmail: client.adapter?.sendVerificationEmail?.bind(client.adapter),
+      verifyEmail: client.adapter?.verifyEmail?.bind(client.adapter),
+      resendVerificationEmail: client.adapter?.resendVerificationEmail?.bind(client.adapter),
+      
+      // Advanced MFA (adapter-specific)
+      enrollMFAFactor: client.adapter?.enrollMFAFactor?.bind(client.adapter),
+      listMFAFactors: client.adapter?.listMFAFactors?.bind(client.adapter),
+      getMFAFactor: client.adapter?.getMFAFactor?.bind(client.adapter),
+      deleteMFAFactor: client.adapter?.deleteMFAFactor?.bind(client.adapter),
+      verifyMFAFactor: client.adapter?.verifyMFAFactor?.bind(client.adapter),
+      initiateMFAChallenge: client.adapter?.initiateMFAChallenge?.bind(client.adapter),
+      getMFAStatus: client.adapter?.getMFAStatus?.bind(client.adapter),
+      
+      // Device management (adapter-specific)
+      listDevices: client.adapter?.listDevices?.bind(client.adapter),
+      revokeDevice: client.adapter?.revokeDevice?.bind(client.adapter),
+      trustDevice: client.adapter?.trustDevice?.bind(client.adapter),
+      listTrustedDevices: client.adapter?.listTrustedDevices?.bind(client.adapter),
+      revokeTrustedDevice: client.adapter?.revokeTrustedDevice?.bind(client.adapter),
+      
+      // Session management (adapter-specific)
+      listSessions: client.adapter?.listSessions?.bind(client.adapter),
+      revokeSession: client.adapter?.revokeSession?.bind(client.adapter),
+      revokeAllSessions: client.adapter?.revokeAllSessions?.bind(client.adapter),
+      
+      // Direct adapter access
+      getCurrentUser: client.adapter?.getCurrentUser?.bind(client.adapter),
+      getCurrentSession: client.adapter?.getCurrentSession?.bind(client.adapter),
+      getCurrentSessionData: client.adapter?.getCurrentSessionData?.bind(client.adapter),
+      normalizeError: client.adapter?.normalizeError?.bind(client.adapter),
     }),
     [
       authState, 

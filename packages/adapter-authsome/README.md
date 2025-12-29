@@ -561,9 +561,129 @@ Ensure your AuthSome API is configured to accept requests from your domain:
 authMode: 'cookies'
 ```
 
+## Advanced Features
+
+### Email Verification
+
+The adapter supports email verification when the `emailverification` plugin is enabled:
+
+```typescript
+const adapter = new AuthSomeAdapter({
+  apiUrl: 'https://auth.yourapp.com',
+  publishableKey: 'pk_your_key',
+  plugins: ['emailverification'],
+});
+
+// Send verification email
+await adapter.sendVerificationEmail({ email: 'user@example.com' });
+
+// Verify email with token
+await adapter.verifyEmail({ token: 'verification_token' });
+
+// Resend verification email
+await adapter.resendVerificationEmail({ email: 'user@example.com' });
+```
+
+### Advanced Multi-Factor Authentication (MFA)
+
+The adapter provides comprehensive MFA management with the `mfa` plugin:
+
+```typescript
+const adapter = new AuthSomeAdapter({
+  apiUrl: 'https://auth.yourapp.com',
+  publishableKey: 'pk_your_key',
+  plugins: ['mfa'],
+});
+
+// Enroll a new MFA factor
+const factor = await adapter.enrollMFAFactor({
+  type: 'totp',
+  name: 'Authenticator App',
+  metadata: { deviceName: 'iPhone' },
+});
+
+// List all enrolled factors
+const factors = await adapter.listMFAFactors();
+
+// Get specific factor details
+const factor = await adapter.getMFAFactor('factor_id');
+
+// Verify an MFA factor
+await adapter.verifyMFAFactor({
+  factorId: 'factor_id',
+  code: '123456',
+});
+
+// Initiate MFA challenge
+const challenge = await adapter.initiateMFAChallenge({
+  userId: 'user_id',
+  factorTypes: ['totp', 'sms'],
+});
+
+// Get MFA status
+const status = await adapter.getMFAStatus();
+console.log(status.enabled, status.factors);
+
+// Delete an MFA factor
+await adapter.deleteMFAFactor('factor_id');
+```
+
+### Device Management
+
+Manage user devices and trusted devices:
+
+```typescript
+const adapter = new AuthSomeAdapter({
+  apiUrl: 'https://auth.yourapp.com',
+  publishableKey: 'pk_your_key',
+  plugins: ['mfa'], // Required for trusted device features
+});
+
+// List all devices
+const devices = await adapter.listDevices();
+
+// Revoke a device
+await adapter.revokeDevice('device_id');
+
+// Trust a device for MFA
+await adapter.trustDevice('device_id', 'My Laptop');
+
+// List trusted devices
+const trustedDevices = await adapter.listTrustedDevices();
+
+// Revoke trust from a device
+await adapter.revokeTrustedDevice('device_id');
+```
+
+### Session Management
+
+Manage user sessions across devices:
+
+```typescript
+// List all active sessions
+const sessions = await adapter.listSessions();
+sessions.forEach(session => {
+  console.log(session.id, session.device, session.location);
+});
+
+// Revoke a specific session
+await adapter.revokeSession('session_id');
+
+// Revoke all sessions except current
+await adapter.revokeAllSessions();
+```
+
 ## Changelog
 
-### v0.1.8 (Latest)
+### v0.1.9 (Latest)
+- ✨ Added comprehensive email verification support
+- ✨ Added advanced MFA factor management (enroll, list, verify, delete)
+- ✨ Added MFA challenge system
+- ✨ Added device management (list, revoke, trust)
+- ✨ Added session management (list, revoke sessions)
+- 📚 Updated documentation with advanced feature examples
+
+### v0.1.8
 - 🚀 Updated to `@authsome/client` v0.0.2
 - ✨ Added `basePath` configuration for API route prefixes
 - 🔧 Plugin initialization now uses factory functions
@@ -586,6 +706,10 @@ authMode: 'cookies'
 - [x] Remove fallback manual requests (client SDK only)
 - [x] Add `basePath` configuration support
 - [x] Add type-safe plugin registry support
+- [x] Add email verification support
+- [x] Add advanced MFA factor management
+- [x] Add device management
+- [x] Add session management
 - [ ] Add WebSocket support for real-time session updates
 - [ ] Add offline support with request queueing
 - [ ] Add request/response interceptors

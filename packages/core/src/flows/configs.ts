@@ -14,6 +14,8 @@ export const simpleSignInFlow: FlowConfig = {
   initialStep: FlowStep.EMAIL_PASSWORD_SIGN_IN,
   allowedSteps: [
     FlowStep.EMAIL_PASSWORD_SIGN_IN,
+    FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    FlowStep.EMAIL_VERIFICATION_SENT,
     FlowStep.PASSWORD_RESET_REQUEST,
     FlowStep.PASSWORD_RESET_SENT,
     FlowStep.SUCCESS,
@@ -23,6 +25,14 @@ export const simpleSignInFlow: FlowConfig = {
     [FlowStep.EMAIL_PASSWORD_SIGN_IN]: {
       onSuccess: FlowStep.SUCCESS,
       onError: FlowStep.EMAIL_PASSWORD_SIGN_IN,
+    },
+    [FlowStep.EMAIL_VERIFICATION_REQUIRED]: {
+      onSuccess: FlowStep.EMAIL_VERIFICATION_SENT,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    },
+    [FlowStep.EMAIL_VERIFICATION_SENT]: {
+      onSuccess: FlowStep.EMAIL_PASSWORD_SIGN_IN,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
     },
     [FlowStep.PASSWORD_RESET_REQUEST]: {
       onSuccess: FlowStep.PASSWORD_RESET_SENT,
@@ -43,6 +53,8 @@ export const signInWithMFAFlow: FlowConfig = {
   initialStep: FlowStep.EMAIL_PASSWORD_SIGN_IN,
   allowedSteps: [
     FlowStep.EMAIL_PASSWORD_SIGN_IN,
+    FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    FlowStep.EMAIL_VERIFICATION_SENT,
     FlowStep.MFA_REQUIRED,
     FlowStep.MFA_SELECT_METHOD,
     FlowStep.MFA_VERIFY,
@@ -61,6 +73,14 @@ export const signInWithMFAFlow: FlowConfig = {
           then: FlowStep.MFA_REQUIRED,
         },
       ],
+    },
+    [FlowStep.EMAIL_VERIFICATION_REQUIRED]: {
+      onSuccess: FlowStep.EMAIL_VERIFICATION_SENT,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+    },
+    [FlowStep.EMAIL_VERIFICATION_SENT]: {
+      onSuccess: FlowStep.EMAIL_PASSWORD_SIGN_IN,
+      onError: FlowStep.EMAIL_VERIFICATION_REQUIRED,
     },
     [FlowStep.MFA_REQUIRED]: {
       onSuccess: FlowStep.MFA_VERIFY,

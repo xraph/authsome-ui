@@ -105,6 +105,24 @@ export type {
   FlowTransition,
   FlowConfigType,
   FlowEngine,
+  // Organization types
+  Organization,
+  OrganizationMembership,
+  // Advanced types
+  FieldDefinition,
+  RequestContext,
+  CookieData,
+  SendVerificationEmailRequest,
+  VerifyEmailRequest,
+  ResendVerificationRequest,
+  MFAFactor,
+  EnrollMFAFactorRequest,
+  VerifyMFAFactorRequest,
+  MFAChallengeRequest,
+  MFAChallengeResponse,
+  Device,
+  SessionInfo,
+  SessionData,
 } from '@authsome/ui-core';
 
 // Re-export flow functions from core (for convenience)
@@ -113,4 +131,7 @@ export { getFlowConfig, predefinedFlows } from '@authsome/ui-core';
 // Re-export locale types and utilities from core (for i18n support)
 export type { AuthLocale, DeepPartial } from '@authsome/ui-core';
 export { defaultLocale, createLocale, interpolate } from '@authsome/ui-core';
+
+// Export AuthContextValue for type reference in useAuth
+export type { AuthContextValue } from './context/AuthProvider';
 

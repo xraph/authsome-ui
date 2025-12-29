@@ -356,6 +356,12 @@ export interface SignInConfig {
   signUpUrl?: string;
 
   /**
+   * Path to sign in page (used for navigation from error pages)
+   * @default '/auth/signin'
+   */
+  signInPath?: string;
+
+  /**
    * Override the global socialFirst setting for signin
    * When set, this takes precedence over the global socialFirst setting
    * @default undefined (uses global socialFirst)

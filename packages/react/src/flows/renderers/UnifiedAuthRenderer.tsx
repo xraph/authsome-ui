@@ -11,7 +11,7 @@ import type { UIComponents } from '../ui-components';
 import type { RendererConfig, CustomField } from '../renderer-config';
 import { DEFAULT_BUILTIN_FIELD_ORDER } from '../renderer-config';
 import type { FlowState, OAuthProvider, FieldDefinition } from '@authsome/ui-core';
-import { defaultLocale, interpolate } from '@authsome/ui-core';
+import { defaultLocale, interpolate, AuthErrorType, FlowStep } from '@authsome/ui-core';
 
 /**
  * Get callback URL from URL search params (client-side only)
@@ -323,14 +323,35 @@ export function UnifiedAuthRenderer({
 
       // Auth state is updated internally, just move to next step
       // Include callbackUrl in metadata for redirect after flow completes
+      setLoading(false);
       await onNext({ 
         email: formData.email,
         metadata: { ...state.metadata, callbackUrl },
       });
     } catch (err: any) {
-      setError(err.message || `${mode === 'signin' ? 'Sign in' : 'Sign up'} failed`);
-    } finally {
       setLoading(false);
+      
+      // Check if this is an EMAIL_NOT_VERIFIED error - navigate to verification flow
+      if (err.type === AuthErrorType.EMAIL_NOT_VERIFIED) {
+        // Navigate to verification step with email context and error details
+        // Explicitly set the currentStep to trigger the email verification flow
+        await onNext({ 
+          currentStep: FlowStep.EMAIL_VERIFICATION_REQUIRED,
+          email: formData.email,
+          error: err,
+          metadata: { 
+            ...state.metadata, 
+            callbackUrl,
+            requiresVerification: true,
+          },
+        });
+        return; // Don't show inline error, user is being navigated to verification
+      }
+      
+      // For other errors, display inline with detailed error message
+      const errorMessage = err.message || err.toString() || `${mode === 'signin' ? 'Sign in' : 'Sign up'} failed`;
+      console.error(`[Auth Error] ${mode} failed:`, err);
+      setError(errorMessage);
     }
   };
 

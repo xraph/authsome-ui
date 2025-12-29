@@ -19,6 +19,17 @@ import type {
   PasskeyAuthRequest,
   User,
   Session,
+  SendVerificationEmailRequest,
+  VerifyEmailRequest,
+  ResendVerificationRequest,
+  MFAFactor,
+  EnrollMFAFactorRequest,
+  VerifyMFAFactorRequest,
+  MFAChallengeRequest,
+  MFAChallengeResponse,
+  Device,
+  ListSessionsOptions,
+  ListSessionsResponse,
 } from '@authsome/ui-core';
 import type { NextAuthConfig, ActionResult } from '../types';
 import {
@@ -411,6 +422,375 @@ export function createServerAuthClient(config: NextAuthConfig) {
         return {
           success: false,
           error: error.message || 'Failed to get OAuth providers',
+        };
+      }
+    },
+
+    // ============================================
+    // Email Verification
+    // ============================================
+
+    /**
+     * Send verification email to user
+     */
+    async sendVerificationEmail(data: SendVerificationEmailRequest): Promise<ActionResult> {
+      try {
+        await adapter.sendVerificationEmail!(data);
+
+        return {
+          success: true,
+          data: { message: 'Verification email sent successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to send verification email',
+        };
+      }
+    },
+
+    /**
+     * Verify email with token/code
+     */
+    async verifyEmail(data: VerifyEmailRequest): Promise<ActionResult> {
+      try {
+        await adapter.verifyEmail!(data);
+
+        return {
+          success: true,
+          data: { message: 'Email verified successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Email verification failed',
+        };
+      }
+    },
+
+    /**
+     * Resend verification email
+     */
+    async resendVerificationEmail(data: ResendVerificationRequest): Promise<ActionResult> {
+      try {
+        await adapter.resendVerificationEmail!(data);
+
+        return {
+          success: true,
+          data: { message: 'Verification email resent successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to resend verification email',
+        };
+      }
+    },
+
+    // ============================================
+    // Advanced Multi-Factor Authentication
+    // ============================================
+
+    /**
+     * Enroll a new MFA factor
+     */
+    async enrollMFAFactor(data: EnrollMFAFactorRequest): Promise<ActionResult<{ factor: MFAFactor }>> {
+      try {
+        const factor = await adapter.enrollMFAFactor!(data);
+
+        return {
+          success: true,
+          data: { factor },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to enroll MFA factor',
+        };
+      }
+    },
+
+    /**
+     * List all enrolled MFA factors
+     */
+    async listMFAFactors(): Promise<ActionResult<{ factors: MFAFactor[] }>> {
+      try {
+        const factors = await adapter.listMFAFactors!();
+
+        return {
+          success: true,
+          data: { factors },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to list MFA factors',
+        };
+      }
+    },
+
+    /**
+     * Get specific MFA factor details
+     */
+    async getMFAFactor(factorId: string): Promise<ActionResult<{ factor: MFAFactor }>> {
+      try {
+        const factor = await adapter.getMFAFactor!(factorId);
+
+        return {
+          success: true,
+          data: { factor },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to get MFA factor',
+        };
+      }
+    },
+
+    /**
+     * Delete an MFA factor
+     */
+    async deleteMFAFactor(factorId: string): Promise<ActionResult> {
+      try {
+        await adapter.deleteMFAFactor!(factorId);
+
+        return {
+          success: true,
+          data: { message: 'MFA factor deleted successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to delete MFA factor',
+        };
+      }
+    },
+
+    /**
+     * Verify an MFA factor
+     */
+    async verifyMFAFactor(data: VerifyMFAFactorRequest): Promise<ActionResult> {
+      try {
+        await adapter.verifyMFAFactor!(data);
+
+        return {
+          success: true,
+          data: { message: 'MFA factor verified successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'MFA factor verification failed',
+        };
+      }
+    },
+
+    /**
+     * Initiate MFA challenge
+     */
+    async initiateMFAChallenge(data: MFAChallengeRequest): Promise<ActionResult<{ challenge: MFAChallengeResponse }>> {
+      try {
+        const challenge = await adapter.initiateMFAChallenge!(data);
+
+        return {
+          success: true,
+          data: { challenge },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to initiate MFA challenge',
+        };
+      }
+    },
+
+    /**
+     * Get MFA status for current user
+     */
+    async getMFAStatus(): Promise<ActionResult> {
+      try {
+        const status = await adapter.getMFAStatus!();
+
+        return {
+          success: true,
+          data: status,
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to get MFA status',
+        };
+      }
+    },
+
+    // ============================================
+    // Device Management
+    // ============================================
+
+    /**
+     * List all devices for current user
+     */
+    async listDevices(): Promise<ActionResult<{ devices: Device[] }>> {
+      try {
+        const devices = await adapter.listDevices!();
+
+        return {
+          success: true,
+          data: { devices },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to list devices',
+        };
+      }
+    },
+
+    /**
+     * Revoke a specific device
+     */
+    async revokeDevice(deviceId: string): Promise<ActionResult> {
+      try {
+        await adapter.revokeDevice!(deviceId);
+
+        return {
+          success: true,
+          data: { message: 'Device revoked successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to revoke device',
+        };
+      }
+    },
+
+    /**
+     * Trust a device for MFA
+     */
+    async trustDevice(deviceId: string, name?: string): Promise<ActionResult> {
+      try {
+        await adapter.trustDevice!(deviceId, name);
+
+        return {
+          success: true,
+          data: { message: 'Device trusted successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to trust device',
+        };
+      }
+    },
+
+    /**
+     * List all trusted devices
+     */
+    async listTrustedDevices(): Promise<ActionResult<{ devices: Device[] }>> {
+      try {
+        const devices = await adapter.listTrustedDevices!();
+
+        return {
+          success: true,
+          data: { devices },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to list trusted devices',
+        };
+      }
+    },
+
+    /**
+     * Revoke trust from a device
+     */
+    async revokeTrustedDevice(deviceId: string): Promise<ActionResult> {
+      try {
+        await adapter.revokeTrustedDevice!(deviceId);
+
+        return {
+          success: true,
+          data: { message: 'Device trust revoked successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to revoke device trust',
+        };
+      }
+    },
+
+    // ============================================
+    // Session Management
+    // ============================================
+
+    /**
+     * List sessions with optional filtering and pagination
+     * 
+     * @param options - Optional filter and pagination parameters
+     */
+    async listSessions(options?: ListSessionsOptions): Promise<ActionResult<ListSessionsResponse>> {
+      try {
+        const result = await adapter.listSessions!(options);
+
+        return {
+          success: true,
+          data: result,
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to list sessions',
+        };
+      }
+    },
+
+    /**
+     * Revoke a specific session
+     */
+    async revokeSession(sessionId: string, cookieStore?: CookieStore): Promise<ActionResult> {
+      try {
+        await adapter.revokeSession!(sessionId);
+        
+        // If revoking current session, clear it
+        const currentSession = await getServerSession(adapter, sessionConfig, cookieStore);
+        if (currentSession?.id === sessionId) {
+          await clearServerSession(sessionConfig, cookieStore);
+        }
+
+        return {
+          success: true,
+          data: { message: 'Session revoked successfully' },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to revoke session',
+        };
+      }
+    },
+
+    /**
+     * Revoke all sessions except current
+     */
+    async revokeAllSessions(cookieStore?: CookieStore): Promise<ActionResult> {
+      try {
+        await adapter.revokeAllSessions!();
+        // Clear local session as all others are revoked
+        await clearServerSession(sessionConfig, cookieStore);
+
+        return {
+          success: true,
+          data: { message: 'All sessions revoked successfully' },
+          redirect: pages?.signIn || '/auth/signin',
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to revoke all sessions',
         };
       }
     },

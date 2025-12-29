@@ -4,6 +4,7 @@
 
 export * from './EmailPasswordRenderer';
 export * from './OAuthRenderer';
+export * from './OAuthCallbackRenderer';
 export * from './MagicLinkRenderer';
 export * from './PhoneAuthRenderer';
 export * from './PasskeyRenderer';

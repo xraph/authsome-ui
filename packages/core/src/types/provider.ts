@@ -268,6 +268,135 @@ export interface CookieData {
 }
 
 /**
+ * Email verification request
+ */
+export interface SendVerificationEmailRequest {
+  email: string;
+}
+
+/**
+ * Verify email request
+ */
+export interface VerifyEmailRequest {
+  token: string;
+  code?: string;
+}
+
+/**
+ * Resend verification email request
+ */
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+/**
+ * MFA Factor representation
+ */
+export interface MFAFactor {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+  createdAt: Date;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Enroll MFA factor request
+ */
+export interface EnrollMFAFactorRequest {
+  type: string;
+  name: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Verify MFA factor request
+ */
+export interface VerifyMFAFactorRequest {
+  factorId: string;
+  code: string;
+}
+
+/**
+ * MFA challenge request
+ */
+export interface MFAChallengeRequest {
+  userId?: string;
+  factorTypes?: string[];
+}
+
+/**
+ * MFA challenge response
+ */
+export interface MFAChallengeResponse {
+  challengeId: string;
+  availableFactors: MFAFactor[];
+  expiresAt: Date;
+}
+
+/**
+ * Device information
+ */
+export interface Device {
+  id: string;
+  userId: string;
+  name?: string;
+  type?: string;
+  lastUsedAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Extended session information with device and location
+ */
+export interface SessionInfo extends Session {
+  device?: Device;
+  location?: string;
+}
+
+/**
+ * Options for listing sessions with filtering and pagination
+ */
+export interface ListSessionsOptions {
+  /** Filter by active sessions only */
+  active?: boolean;
+  /** Filter by IP address */
+  ipAddress?: string;
+  /** Filter by user agent */
+  userAgent?: string;
+  /** Filter sessions created after this date (ISO string or Date) */
+  createdFrom?: string | Date;
+  /** Filter sessions created before this date (ISO string or Date) */
+  createdTo?: string | Date;
+  /** Field to sort by (e.g., 'createdAt', 'lastUsedAt') */
+  sortBy?: string;
+  /** Sort order */
+  sortOrder?: 'asc' | 'desc';
+  /** Maximum number of sessions to return (default: 50) */
+  limit?: number;
+  /** Number of sessions to skip for pagination (default: 0) */
+  offset?: number;
+}
+
+/**
+ * Paginated response for session listing
+ */
+export interface ListSessionsResponse {
+  /** Array of session information */
+  sessions: SessionInfo[];
+  /** Total number of sessions matching the filter */
+  total: number;
+  /** Current page number */
+  page: number;
+  /** Total number of pages */
+  totalPages: number;
+  /** Number of sessions per page */
+  limit: number;
+}
+
+/**
  * Auth provider interface
  * 
  * This interface defines the contract that all auth providers must implement.
@@ -475,5 +604,120 @@ export interface AuthProvider {
    * Optional - only needed for edge runtime environments
    */
   clearContext?(): void;
+
+  // Email Verification methods (optional)
+  /**
+   * Send verification email to user
+   * Optional - only available if adapter supports email verification
+   */
+  sendVerificationEmail?(request: SendVerificationEmailRequest): Promise<void>;
+
+  /**
+   * Verify email with token/code
+   * Optional - only available if adapter supports email verification
+   */
+  verifyEmail?(request: VerifyEmailRequest): Promise<void>;
+
+  /**
+   * Resend verification email
+   * Optional - only available if adapter supports email verification
+   */
+  resendVerificationEmail?(request: ResendVerificationRequest): Promise<void>;
+
+  // Advanced MFA methods (optional)
+  /**
+   * Enroll a new MFA factor
+   * Optional - only available if adapter supports advanced MFA
+   */
+  enrollMFAFactor?(request: EnrollMFAFactorRequest): Promise<MFAFactor>;
+
+  /**
+   * List all enrolled MFA factors
+   * Optional - only available if adapter supports advanced MFA
+   */
+  listMFAFactors?(): Promise<MFAFactor[]>;
+
+  /**
+   * Get specific MFA factor details
+   * Optional - only available if adapter supports advanced MFA
+   */
+  getMFAFactor?(factorId: string): Promise<MFAFactor>;
+
+  /**
+   * Delete an MFA factor
+   * Optional - only available if adapter supports advanced MFA
+   */
+  deleteMFAFactor?(factorId: string): Promise<void>;
+
+  /**
+   * Verify an MFA factor
+   * Optional - only available if adapter supports advanced MFA
+   */
+  verifyMFAFactor?(request: VerifyMFAFactorRequest): Promise<void>;
+
+  /**
+   * Initiate MFA challenge
+   * Optional - only available if adapter supports advanced MFA
+   */
+  initiateMFAChallenge?(request: MFAChallengeRequest): Promise<MFAChallengeResponse>;
+
+  /**
+   * Get MFA status for current user
+   * Optional - only available if adapter supports advanced MFA
+   */
+  getMFAStatus?(): Promise<{ enabled: boolean; factors: MFAFactor[] }>;
+
+  // Device Management methods (optional)
+  /**
+   * List all devices for current user
+   * Optional - only available if adapter supports device management
+   */
+  listDevices?(): Promise<Device[]>;
+
+  /**
+   * Revoke a specific device
+   * Optional - only available if adapter supports device management
+   */
+  revokeDevice?(deviceId: string): Promise<void>;
+
+  /**
+   * Trust a device for MFA
+   * Optional - only available if adapter supports device management
+   */
+  trustDevice?(deviceId: string, name?: string): Promise<void>;
+
+  /**
+   * List all trusted devices
+   * Optional - only available if adapter supports device management
+   */
+  listTrustedDevices?(): Promise<Device[]>;
+
+  /**
+   * Revoke trust from a device
+   * Optional - only available if adapter supports device management
+   */
+  revokeTrustedDevice?(deviceId: string): Promise<void>;
+
+  // Session Management methods (optional)
+  /**
+   * List sessions with optional filtering and pagination
+   * Optional - only available if adapter supports session management
+   * 
+   * @param options - Optional filter and pagination parameters
+   * @returns Paginated session list with metadata
+   */
+  listSessions?(options?: ListSessionsOptions): Promise<ListSessionsResponse>;
+
+  /**
+   * Revoke a specific session
+   * Optional - only available if adapter supports session management
+   */
+  revokeSession?(sessionId: string): Promise<void>;
+
+  /**
+   * Revoke all sessions except current
+   * Optional - only available if adapter supports session management
+   */
+  revokeAllSessions?(): Promise<void>;
 }
 

@@ -27,7 +27,7 @@
     "@authsome/ui-core": "workspace:*"
   },
   "dependencies": {
-    "@authsome/client": "^0.0.3"
+    "@authsome/client": "0.0.6"
   },
   "devDependencies": {
     "@authsome/ui-core": "workspace:*",

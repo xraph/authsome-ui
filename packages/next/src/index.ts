@@ -9,6 +9,7 @@
 export { NextAuthProvider } from './components/NextAuthProvider';
 export { AuthFlowClient } from './components/AuthFlowClient';
 export { ProtectedRoute } from './components/ProtectedRoute';
+export { OAuthCallbackClient } from './components/OAuthCallbackClient';
 
 // Hooks
 // Note: useAuthSync and useSessionRefresh removed to avoid bundling server code
@@ -46,6 +47,9 @@ export type {
   RedirectValidation,
   AuthSyncOptions,
 } from './types';
+
+// Component prop types
+export type { OAuthCallbackClientProps } from './components/OAuthCallbackClient';
 
 // Re-export core types for convenience
 export type {

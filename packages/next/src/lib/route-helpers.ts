@@ -25,12 +25,24 @@ export function createOAuthCallbackHandler(config: NextAuthConfig) {
     request: NextRequest,
     context: { params: Promise<{ auth?: string[] }> }
   ) {
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:28',message:'OAuth callback handler invoked',data:{url:request.url,method:request.method},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     try {
       const params = await context.params;
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:33',message:'Context params resolved',data:{auth:params.auth},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       const route = parseAuthRoute(params.auth);
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:37',message:'Route parsed',data:{routeType:route.type,routeProvider:route.provider,segments:route.segments},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
       // Only handle callback routes
       if (route.type !== 'callback') {
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:42',message:'Not a callback route - returning error',data:{routeType:route.type},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         return NextResponse.json(
           { error: 'Not a callback route' },
           { status: 400 }
@@ -40,30 +52,75 @@ export function createOAuthCallbackHandler(config: NextAuthConfig) {
       // Extract OAuth provider from route or query params
       const searchParams = request.nextUrl.searchParams;
       const provider = extractOAuthProvider(route, searchParams);
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:53',message:'Provider extracted',data:{provider:provider,hasCode:searchParams.has('code'),hasState:searchParams.has('state')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
 
       if (!provider) {
+        // #region agent log
+        fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:57',message:'No provider found - returning error',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         return NextResponse.json(
           { error: 'No OAuth provider specified' },
           { status: 400 }
         );
       }
 
+      // Extract cookies from request to pass to adapter
+      const cookieStore: Record<string, string> = {};
+      request.cookies.getAll().forEach(cookie => {
+        cookieStore[cookie.name] = cookie.value;
+      });
+      console.log('[OAuth Route Handler] Extracted request cookies:', Object.keys(cookieStore));
+      
       // Handle OAuth callback
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:67',message:'Calling handleOAuthCallback',data:{provider:provider},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       const result = await handleOAuthCallback(
         searchParams,
         provider,
         config.adapter,
-        config
+        config,
+        cookieStore
       );
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:76',message:'handleOAuthCallback result',data:{success:result.success,redirect:result.redirect,error:result.error,hasCookies:!!result.cookies},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
-      if (result.success) {
-        // Redirect to success URL
-        return NextResponse.redirect(new URL(result.redirect, request.url));
+      // Create redirect response
+      const redirectUrl = new URL(result.redirect, request.url);
+      const response = NextResponse.redirect(redirectUrl);
+
+      // Set raw Set-Cookie headers directly from backend
+      if (result.rawSetCookieHeaders && result.rawSetCookieHeaders.length > 0) {
+        console.log('[OAuth Route Handler] Setting raw Set-Cookie headers:', result.rawSetCookieHeaders.length);
+        
+        for (const setCookieHeader of result.rawSetCookieHeaders) {
+          console.log('[OAuth Route Handler] Appending Set-Cookie header');
+          
+          // CRITICAL: Use append, not set, to allow multiple Set-Cookie headers
+          response.headers.append('Set-Cookie', setCookieHeader);
+        }
+        
+        console.log('[OAuth Route Handler] All Set-Cookie headers appended');
+        
+        // Verify they were set
+        const setCookieHeaders = response.headers.getSetCookie?.() || [];
+        console.log('[OAuth Route Handler] Verification - Set-Cookie headers in response:', setCookieHeaders.length);
+        setCookieHeaders.forEach((h, i) => {
+          console.log(`[OAuth Route Handler] Header ${i + 1}:`, h.substring(0, 100) + '...');
+        });
       } else {
-        // Redirect to error page with error message
-        return NextResponse.redirect(new URL(result.redirect, request.url));
+        console.warn('[OAuth Route Handler] WARNING: No raw Set-Cookie headers to set!');
+        console.warn('[OAuth Route Handler] Result:', JSON.stringify(result, null, 2));
       }
+
+      return response;
     } catch (error: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:89',message:'Exception caught in callback handler',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       console.error('OAuth callback error:', error);
 
       // Redirect to error page
@@ -115,8 +172,15 @@ export async function getAuthPageProps(options: {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:119',message:'getAuthPageProps called',data:{auth:resolvedParams.auth,searchParamsKeys:resolvedSearchParams?Object.keys(resolvedSearchParams):[]},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+  
   // Parse route
   const route = parseAuthRoute(resolvedParams.auth);
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'route-helpers.ts:125',message:'Route parsed in getAuthPageProps',data:{routeType:route.type,segments:route.segments},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
 
   // Get session
   const session = await getServerSession(config.adapter, config.session);

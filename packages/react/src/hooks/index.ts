@@ -16,4 +16,5 @@ export * from './usePhoneAuth';
 export * from './useUsernameAuth';
 export * from './useRequireAuth';
 export * from './useOrganization';
+export * from './useAdapter';
 

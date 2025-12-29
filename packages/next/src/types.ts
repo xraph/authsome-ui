@@ -11,6 +11,7 @@ import type {
   AuthLocale,
   DeepPartial,
   Organization,
+  CookieData,
 } from '@authsome/ui-core';
 import { AuthError } from '@authsome/ui-core';
 import type { UIComponents, RendererConfig } from '@authsome/ui-react';
@@ -317,6 +318,33 @@ export interface ActionResult<T = unknown> {
  * 
  * Note: config is now provided via NextAuthProvider context,
  * not as a prop to AuthFlowClient.
+ * 
+ * @property route - Parsed authentication route information
+ * @property initialSession - Initial session data from server (if available)
+ * @property searchParams - URL search parameters for error handling and state
+ * 
+ * ### Error Handling
+ * 
+ * When the route type is 'error', the component will extract error information
+ * from searchParams and display it using the ErrorRenderer component.
+ * 
+ * Supported error search parameters:
+ * - `error`: Main error message (required)
+ * - `error_description`: Detailed error description (optional, overrides error)
+ * - `error_type`: Error type matching AuthErrorType enum values (optional)
+ * - `error_code`: Error code for reference (optional)
+ * 
+ * @example
+ * ```
+ * // OAuth callback failure redirects to:
+ * /auth/error?error=Failed%20to%20handle%20OAuth%20callback
+ * 
+ * // With detailed description:
+ * /auth/error?error=oauth_failed&error_description=Provider%20returned%20invalid%20state
+ * 
+ * // With error type:
+ * /auth/error?error=Invalid%20credentials&error_type=invalid_credentials
+ * ```
  */
 export interface AuthFlowClientProps {
   route: ParsedAuthRoute;
@@ -355,6 +383,12 @@ export interface ProtectedRouteProps {
 export type { SessionData } from '@authsome/ui-core';
 
 /**
+ * Cookie data for forwarding adapter cookies
+ * Re-exported from @authsome/ui-core for convenience
+ */
+export type { CookieData } from '@authsome/ui-core';
+
+/**
  * OAuth callback query params
  */
 export interface OAuthCallbackParams {
@@ -363,6 +397,18 @@ export interface OAuthCallbackParams {
   error?: string;
   error_description?: string;
   provider?: string;
+}
+
+/**
+ * OAuth callback result
+ * Returned by handleOAuthCallback with redirect URL and optional cookies
+ */
+export interface OAuthCallbackResult {
+  success: boolean;
+  redirect: string;
+  error?: string;
+  cookies?: CookieData[];
+  rawSetCookieHeaders?: string[];
 }
 
 /**

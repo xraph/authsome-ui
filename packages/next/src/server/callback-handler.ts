@@ -4,7 +4,7 @@
  */
 
 import type { AuthProvider, OAuthProvider } from '@authsome/ui-core';
-import type { OAuthCallbackParams, NextAuthConfig } from '../types';
+import type { OAuthCallbackParams, NextAuthConfig, OAuthCallbackResult } from '../types';
 import { setServerSession } from './session';
 import { getRedirectUrl } from '../lib/redirect-manager';
 import { ERROR_MESSAGES } from '../lib/constants';
@@ -19,21 +19,25 @@ import { ERROR_MESSAGES } from '../lib/constants';
  * @param provider - Provider from path segment (optional)
  * @param adapter - Auth provider adapter
  * @param config - Next auth configuration
- * @returns Object with success status, redirect URL, and error if any
+ * @param cookieStore - Optional cookie store for setting adapter context
+ * @returns Object with success status, redirect URL, optional cookies, and error if any
  */
 export async function handleOAuthCallback(
   searchParams: URLSearchParams,
   provider: string | undefined,
   adapter: AuthProvider,
-  config: NextAuthConfig
-): Promise<{
-  success: boolean;
-  redirect: string;
-  error?: string;
-}> {
+  config: NextAuthConfig,
+  cookieStore?: Record<string, string>
+): Promise<OAuthCallbackResult> {
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:34',message:'handleOAuthCallback invoked',data:{provider:provider,hasSearchParams:searchParams.toString().length>0},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   try {
     // Extract parameters from URL
     const params = extractOAuthParams(searchParams);
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:40',message:'OAuth params extracted',data:{hasCode:!!params.code,hasState:!!params.state,hasError:!!params.error,provider:params.provider},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
 
     // Check for OAuth error response
     if (params.error) {
@@ -72,18 +76,117 @@ export async function handleOAuthCallback(
 
     // Verify we have a code
     if (!params.code) {
+      // #region agent log
+      fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:77',message:'Missing authorization code',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       throw new Error(ERROR_MESSAGES.CALLBACK_ERROR + ': Missing authorization code');
     }
 
-    // Call adapter to exchange code for session
-    const response = await adapter.oauthCallback({
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:84',message:'Calling adapter.oauthCallback',data:{provider:oauthProvider,codeLength:params.code?.length,hasState:!!params.state},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    
+    // Make direct HTTP request to backend to capture Set-Cookie headers
+    // The AuthSome client uses fetch which hides Set-Cookie headers
+    let rawSetCookieHeaders: string[] = [];
+    let response: any;
+    
+    // Check if adapter has a getClient method to get the base URL
+    const client = (adapter as any).getClient?.();
+    if (client && client.baseURL) {
+      const backendUrl = `${client.baseURL}${client.basePath || ''}/callback/${oauthProvider}`;
+      const fullUrl = `${backendUrl}?code=${encodeURIComponent(params.code!)}${params.state ? `&state=${encodeURIComponent(params.state)}` : ''}`;
+      
+      console.log('[OAuth Callback] Making direct request to:', fullUrl);
+      
+      // Build headers including existing cookies
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (cookieStore && Object.keys(cookieStore).length > 0) {
+        const cookieString = Object.entries(cookieStore)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('; ');
+        headers['Cookie'] = cookieString;
+      }
+      
+      // Add API key if available
+      if (client.apiKey) {
+        headers[client.apiKeyHeader || 'X-API-Key'] = client.apiKey;
+      }
+      
+      const backendResponse = await fetch(fullUrl, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+      
+      console.log('[OAuth Callback] Backend response status:', backendResponse.status);
+      
+      // Try to extract Set-Cookie headers
+      if ('getSetCookie' in backendResponse.headers && typeof backendResponse.headers.getSetCookie === 'function') {
+        rawSetCookieHeaders = backendResponse.headers.getSetCookie();
+        console.log('[OAuth Callback] Got Set-Cookie headers via getSetCookie():', rawSetCookieHeaders.length);
+      }
+      
+      if (!backendResponse.ok) {
+        const error = await backendResponse.json().catch(() => ({ error: backendResponse.statusText }));
+        throw new Error(error.error || error.message || 'OAuth callback failed');
+      }
+      
+      response = await backendResponse.json();
+      console.log('[OAuth Callback] Got response from backend');
+    } else {
+      // Fallback to adapter method
+      console.log('[OAuth Callback] Using adapter method (Set-Cookie headers may not be captured)');
+      
+      if (adapter.setContext && cookieStore) {
+        adapter.setContext({
+          url: '',
+          method: 'GET',
+          headers: {},
+          cookies: cookieStore,
+        });
+      }
+      
+      response = await adapter.oauthCallback({
       provider: oauthProvider as OAuthProvider,
       code: params.code,
       state: params.state,
     });
+      
+      // Try to get cookies from adapter
+      if ('getRawSetCookieHeaders' in adapter && typeof adapter.getRawSetCookieHeaders === 'function') {
+        rawSetCookieHeaders = adapter.getRawSetCookieHeaders() || [];
+      }
+    }
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:93',message:'OAuth callback response received',data:{hasUser:!!response.user,hasSession:!!response.session,userId:response.user?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
 
     // Store session in cookie
     await setServerSession(response.user, response.session, config.session);
+    // #region agent log
+    fetch('http://127.0.0.1:7244/ingest/32948365-25a5-4865-becb-43b9c32d9143',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'callback-handler.ts:100',message:'Session stored',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+
+    // Log captured Set-Cookie headers
+    console.log('[OAuth Callback] Raw Set-Cookie headers captured:', rawSetCookieHeaders.length);
+    if (rawSetCookieHeaders.length > 0) {
+      rawSetCookieHeaders.forEach((header, index) => {
+        console.log(`[OAuth Callback] Set-Cookie ${index + 1}:`, header);
+      });
+    } else {
+      console.warn('[OAuth Callback] WARNING: No Set-Cookie headers captured!');
+    }
+    
+    // Clear adapter context if it was set
+    if (adapter.clearContext) {
+      console.log('[OAuth Callback] Clearing adapter context');
+      adapter.clearContext();
+    }
 
     // Determine redirect URL
     let redirectUrl: string;
@@ -109,6 +212,7 @@ export async function handleOAuthCallback(
     return {
       success: true,
       redirect: redirectUrl,
+      rawSetCookieHeaders: rawSetCookieHeaders.length > 0 ? rawSetCookieHeaders : undefined,
     };
   } catch (error: any) {
     console.error('OAuth callback error:', error);
