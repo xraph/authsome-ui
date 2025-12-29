@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.7...ui-core-v0.1.8) (2025-12-29)
+
+
+### Features
+
+* enhance OAuth flow with email verification and session management improvements ([8b16821](https://github.com/xraph/authsome-ui/commit/8b16821946445aa69c52c86c3aa349ad8da9c307))
+
 ## [0.1.7](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.6...ui-core-v0.1.7) (2025-12-10)
 
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.15](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.14...ui-next-v0.1.15) (2025-12-29)
+
+
+### Features
+
+* enhance OAuth flow with email verification and session management improvements ([8b16821](https://github.com/xraph/authsome-ui/commit/8b16821946445aa69c52c86c3aa349ad8da9c307))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.8
+    * @authsome/ui-react bumped to 0.1.14
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.8
+    * @authsome/ui-react bumped to 0.1.14
+
 ## [0.1.14](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.13...ui-next-v0.1.14) (2025-12-10)
 
 

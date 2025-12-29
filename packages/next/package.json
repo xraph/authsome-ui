@@ -1,6 +1,6 @@
 {
   "name": "@authsome/ui-next",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Next.js integration for AuthSome UI with App Router support, middleware, and automatic OAuth handling",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
