@@ -1,6 +1,6 @@
 {
   "name": "@authsome/ui-react",
-  "version": "0.1.13",
+  "version": "0.1.12",
   "description": "React bindings for AuthSome UI",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
