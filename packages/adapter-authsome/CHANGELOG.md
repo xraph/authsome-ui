@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.11](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.10...adapter-authsome-v0.1.11) (2025-12-10)
+
+
+### Features
+
+* implement fetch interceptor for cookie handling in AuthSomeAdapter ([2609e16](https://github.com/xraph/authsome-ui/commit/2609e163bccd89272c8ef864e876f2f0e9d2c85f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.7
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.7
+
 ## [0.1.10](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.9...adapter-authsome-v0.1.10) (2025-11-26)
 
 

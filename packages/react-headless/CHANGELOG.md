@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.14](https://github.com/xraph/authsome-ui/compare/ui-react-headless-v0.1.13...ui-react-headless-v0.1.14) (2025-12-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.7
+    * @authsome/ui-react bumped to 0.1.13
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.7
+    * @authsome/ui-react bumped to 0.1.13
+
 ## [0.1.13](https://github.com/xraph/authsome-ui/compare/ui-react-headless-v0.1.12...ui-react-headless-v0.1.13) (2025-12-09)
 
 

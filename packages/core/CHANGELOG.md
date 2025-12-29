@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.6...ui-core-v0.1.7) (2025-12-10)
+
+
+### Features
+
+* implement fetch interceptor for cookie handling in AuthSomeAdapter ([2609e16](https://github.com/xraph/authsome-ui/commit/2609e163bccd89272c8ef864e876f2f0e9d2c85f))
+
 ## [0.1.6](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.5...ui-core-v0.1.6) (2025-11-26)
 
 
