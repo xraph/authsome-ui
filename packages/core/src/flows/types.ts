@@ -58,6 +58,15 @@ export enum FlowStep {
   PROFILE_UPDATE = 'profile_update',
   PROFILE_COMPLETE = 'profile_complete',
   
+  // Device flow (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+  DEVICE_FLOW_INITIATE = 'device_flow_initiate',
+  DEVICE_CODE_ENTRY = 'device_code_entry',
+  DEVICE_CODE_VERIFY = 'device_code_verify',
+  DEVICE_AUTHORIZE = 'device_authorize',
+  DEVICE_POLLING = 'device_polling',
+  DEVICE_AUTHORIZED = 'device_authorized',
+  DEVICE_DENIED = 'device_denied',
+  
   // Terminal states
   SUCCESS = 'success',
   ERROR = 'error',
@@ -83,6 +92,9 @@ export interface FlowState {
   phone?: string;
   username?: string;
   
+  // General-purpose token (e.g., password reset token, email verification link token)
+  token?: string;
+  
   // MFA context
   mfaRequired?: boolean;
   mfaMethods?: TwoFactorMethod[];
@@ -96,6 +108,17 @@ export interface FlowState {
   verificationRequired?: boolean;
   verificationToken?: string;
   verificationSent?: boolean;
+  
+  // Device flow context (RFC 8628)
+  deviceCode?: string;
+  userCode?: string;
+  verificationUri?: string;
+  verificationUriComplete?: string;
+  deviceCodeExpiresIn?: number;
+  devicePollingInterval?: number;
+  deviceClientId?: string;
+  deviceScopes?: string[];
+  deviceAuthorized?: boolean;
   
   // Error context
   error?: AuthError;
@@ -175,6 +198,9 @@ export enum FlowConfigType {
   
   // Email verification
   EMAIL_VERIFICATION_FLOW = 'email_verification_flow',
+  
+  // Device flow
+  DEVICE_FLOW = 'device_flow',
   
   // Custom
   CUSTOM = 'custom',

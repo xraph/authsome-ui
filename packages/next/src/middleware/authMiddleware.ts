@@ -95,8 +95,12 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
     }
 
     // Skip auth routes (let the route handler deal with them)
+    // Exception: cli-login (device flow) requires authentication to authorize
     if (isAuthRoute(pathname, basePath) && !session?.sessionData) {
-      return NextResponse.next();
+      const cliLoginPath = normalizePath(config.pages?.cliLogin || `${basePath}/cli-login`);
+      if (pathname !== cliLoginPath) {
+        return NextResponse.next();
+      }
     }
 
     // Require authentication for protected routes
@@ -175,8 +179,9 @@ export function createAuthMiddlewareWithHandler(
       return NextResponse.next();
     }
 
-    // Skip auth routes
-    if (isAuthRoute(pathname, basePath)) {
+    // Skip auth routes, except cli-login which requires authentication
+    const cliLoginPath = normalizePath(config.pages?.cliLogin || `${basePath}/cli-login`);
+    if (isAuthRoute(pathname, basePath) && pathname !== cliLoginPath) {
       return NextResponse.next();
     }
 

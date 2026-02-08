@@ -17,6 +17,13 @@ import type {
   PasswordChangeRequest,
   PasskeyAuthRequest,
   AuthProvider,
+  DeviceFlowInitiateRequest,
+  DeviceCodeVerifyRequest,
+  DeviceAuthorizeRequest,
+  DeviceTokenPollRequest,
+  SendVerificationEmailRequest,
+  VerifyEmailRequest,
+  ResendVerificationRequest,
 } from '@authsome/ui-core';
 import type { ActionResult, SessionConfig, NextAuthConfig } from '../types';
 import {
@@ -340,6 +347,85 @@ export async function confirmPasswordResetAction(data: PasswordResetConfirmReque
 }
 
 /**
+ * Send verification email action
+ */
+export async function sendVerificationEmailAction(data: SendVerificationEmailRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    if (!adapter.sendVerificationEmail) {
+      return {
+        success: false,
+        error: 'Email verification is not supported by this adapter',
+      };
+    }
+    await adapter.sendVerificationEmail(data);
+
+    return {
+      success: true,
+      data: { message: 'Verification email sent' },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to send verification email',
+    };
+  }
+}
+
+/**
+ * Verify email action (token or code from link/email)
+ */
+export async function verifyEmailAction(data: VerifyEmailRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    if (!adapter.verifyEmail) {
+      return {
+        success: false,
+        error: 'Email verification is not supported by this adapter',
+      };
+    }
+    await adapter.verifyEmail(data);
+
+    return {
+      success: true,
+      data: { message: 'Email verified successfully' },
+      redirect: globalConfig?.pages?.signIn || '/auth/signin',
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Email verification failed',
+    };
+  }
+}
+
+/**
+ * Resend verification email action
+ */
+export async function resendVerificationEmailAction(data: ResendVerificationRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    if (!adapter.resendVerificationEmail) {
+      return {
+        success: false,
+        error: 'Email verification is not supported by this adapter',
+      };
+    }
+    await adapter.resendVerificationEmail(data);
+
+    return {
+      success: true,
+      data: { message: 'Verification email sent' },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to resend verification email',
+    };
+  }
+}
+
+/**
  * Change password action
  */
 export async function changePasswordAction(data: PasswordChangeRequest): Promise<ActionResult> {
@@ -403,6 +489,150 @@ export async function getOAuthProvidersAction(): Promise<ActionResult> {
     return {
       success: false,
       error: error.message || 'Failed to get OAuth providers',
+    };
+  }
+}
+
+// Device Flow Actions (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+
+/**
+ * Initiate device flow action
+ * Used by CLI/device applications to start the authorization process
+ */
+export async function initiateDeviceFlowAction(data: DeviceFlowInitiateRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    
+    // Check if adapter supports device flow
+    if (!adapter.initiateDeviceFlow) {
+      return {
+        success: false,
+        error: 'Device flow is not supported by this adapter',
+      };
+    }
+    
+    const response = await adapter.initiateDeviceFlow(data);
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to initiate device flow',
+    };
+  }
+}
+
+/**
+ * Verify device code action
+ * Used by web UI when user enters the code shown on their device
+ */
+export async function verifyDeviceCodeAction(data: DeviceCodeVerifyRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    
+    // Check if adapter supports device flow
+    if (!adapter.verifyDeviceCode) {
+      return {
+        success: false,
+        error: 'Device flow is not supported by this adapter',
+      };
+    }
+    
+    const response = await adapter.verifyDeviceCode(data);
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Invalid device code',
+    };
+  }
+}
+
+/**
+ * Authorize device action
+ * Called when user approves or denies the authorization request
+ */
+export async function authorizeDeviceAction(data: DeviceAuthorizeRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    
+    // Check if adapter supports device flow
+    if (!adapter.authorizeDevice) {
+      return {
+        success: false,
+        error: 'Device flow is not supported by this adapter',
+      };
+    }
+    
+    await adapter.authorizeDevice(data);
+
+    return {
+      success: true,
+      data: { 
+        message: data.action === 'approve' 
+          ? 'Device authorized successfully' 
+          : 'Device authorization denied',
+        action: data.action,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to authorize device',
+    };
+  }
+}
+
+/**
+ * Poll for device token action
+ * Used by CLI/device to check if user has authorized
+ */
+export async function pollDeviceTokenAction(data: DeviceTokenPollRequest): Promise<ActionResult> {
+  try {
+    const adapter = getAdapter();
+    
+    // Check if adapter supports device flow
+    if (!adapter.pollDeviceToken) {
+      return {
+        success: false,
+        error: 'Device flow is not supported by this adapter',
+      };
+    }
+    
+    const response = await adapter.pollDeviceToken(data);
+
+    // Check if this is an auth response (has user and session)
+    if ('user' in response && 'session' in response) {
+      // Store session on successful auth
+      await setServerSession(response.user, response.session, getSessionConfig());
+
+      const redirectUrl = globalConfig?.callbacks?.signIn
+        ? await globalConfig.callbacks.signIn(response.user, response.session)
+        : '/';
+
+      return {
+        success: true,
+        data: response,
+        redirect: redirectUrl,
+      };
+    }
+
+    // Still polling - return status
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to poll for device token',
     };
   }
 }

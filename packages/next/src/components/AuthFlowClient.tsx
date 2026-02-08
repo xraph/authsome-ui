@@ -123,6 +123,21 @@ function RouteAuthProvider({
           initialFlowState: { currentStep: FlowStep.EMAIL_VERIFICATION_REQUIRED },
         };
 
+      case 'cli-login': {
+        // Extract user code from URL params if provided (e.g., ?code=XXXX-XXXX)
+        const userCode = searchParams?.code 
+          ? (Array.isArray(searchParams.code) ? searchParams.code[0] : searchParams.code)
+          : undefined;
+        
+        return {
+          flows: predefinedFlows[FlowConfigType.DEVICE_FLOW],
+          initialFlowState: { 
+            currentStep: FlowStep.DEVICE_CODE_ENTRY,
+            ...(userCode && { userCode }),
+          },
+        };
+      }
+
       case 'signup':
         return {
           flows: predefinedFlows[FlowConfigType.COMPLETE_SIGN_UP_FLOW],

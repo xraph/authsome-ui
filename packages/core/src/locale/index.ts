@@ -82,6 +82,42 @@ export interface AuthLocale {
     usePasskey: string;
   };
   
+  // Device Flow (RFC 8628)
+  deviceFlow: {
+    title: string;
+    subtitle: string;
+    enterCode: string;
+    enterCodeDescription: string;
+    codeLabel: string;
+    codePlaceholder: string;
+    codeHint: string;
+    verify: string;
+    verifyCode: string;
+    invalidCode: string;
+    noCode: string;
+    getCodeHelp: string;
+    authorizationTitle: string;
+    authorizationSubtitle: string;
+    authorizeTitle: string;
+    authorizeDescription: string;
+    requestingAccess: string;
+    codeConfirm: string;
+    requestedPermissions: string;
+    securityWarning: string;
+    scopes: string;
+    approve: string;
+    deny: string;
+    authorizedTitle: string;
+    authorizedMessage: string;
+    authorizedDescription: string;
+    authorizedHint: string;
+    returnToCli: string;
+    deniedTitle: string;
+    deniedMessage: string;
+    deniedDescription: string;
+    deniedHint: string;
+  };
+  
   // Sign Up specific
   signUp: {
     title: string;

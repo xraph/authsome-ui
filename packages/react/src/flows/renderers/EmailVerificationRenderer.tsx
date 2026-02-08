@@ -99,16 +99,35 @@ export function EmailVerificationRequiredRenderer({
  */
 export function EmailVerificationSentRenderer({
   state,
+  onNext: _onNext,
+  isLoading,
   uiComponents,
   rendererConfig,
-}: {
-  state: FlowState;
-  uiComponents: UIComponents;
-  rendererConfig?: RendererConfig;
-}) {
-  const { Alert: AlertComponents, icons } = uiComponents;
+}: EmailVerificationRendererProps) {
+  const { resendVerificationEmail } = useAuth();
+  const { Button, Alert: AlertComponents, icons } = uiComponents;
   const { Alert, AlertDescription } = AlertComponents || {};
   const MailIcon = icons?.mail;
+  const locale = rendererConfig?.locale || defaultLocale;
+
+  const [error, setError] = useState<string | null>(null);
+  const [resendLoading, setResendLoading] = useState(false);
+
+  const handleResend = async () => {
+    setError(null);
+    setResendLoading(true);
+    try {
+      if (resendVerificationEmail && state.email) {
+        await resendVerificationEmail({ email: state.email });
+      }
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : locale.errors?.generic ?? 'Failed to resend verification email'
+      );
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 text-center py-6">
@@ -136,9 +155,27 @@ export function EmailVerificationSentRenderer({
         </Alert>
       )}
 
+      {error && Alert && AlertDescription && (
+        <Alert variant="error">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <p className="text-sm text-gray-600">
         Didn&apos;t receive the email? Check your spam folder or try again.
       </p>
+
+      {resendVerificationEmail && state.email && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleResend}
+          loading={resendLoading || isLoading}
+          className="w-full"
+        >
+          Resend verification email
+        </Button>
+      )}
     </div>
   );
 }
@@ -157,7 +194,7 @@ export function EmailVerificationCodeRenderer({
   const { Input, Button, Alert: AlertComponents, Field, icons } = uiComponents;
   
   const { Alert, AlertDescription } = AlertComponents || {};
-  const LockIcon = icons?.lock;
+  const LockIcon = icons?.key;
   const locale = rendererConfig?.locale || defaultLocale;
 
   const [code, setCode] = useState('');
@@ -177,7 +214,7 @@ export function EmailVerificationCodeRenderer({
 
     try {
       if (verifyEmail) {
-        await verifyEmail({ code, email: state.email || '' });
+        await verifyEmail({ token: code });
       }
       await onNext();
     } catch (err: any) {
@@ -251,7 +288,7 @@ export function EmailVerificationLinkRenderer({
   uiComponents,
   rendererConfig,
 }: EmailVerificationRendererProps) {
-  const { verifyEmailToken } = useAuth();
+  const { verifyEmail } = useAuth();
   const { Button, Alert: AlertComponents, icons } = uiComponents;
   
   const { Alert, AlertDescription } = AlertComponents || {};
@@ -271,8 +308,8 @@ export function EmailVerificationLinkRenderer({
       }
 
       try {
-        if (verifyEmailToken) {
-          await verifyEmailToken({ token: state.token });
+        if (verifyEmail) {
+          await verifyEmail({ token: state.token });
         }
         setStatus('success');
         // Auto-proceed after a short delay
@@ -286,7 +323,7 @@ export function EmailVerificationLinkRenderer({
     };
 
     verifyToken();
-  }, [state.token, verifyEmailToken, onNext, locale.errors?.invalidToken]);
+  }, [state.token, verifyEmail, onNext, locale.errors?.invalidToken]);
 
   if (status === 'verifying') {
     return (

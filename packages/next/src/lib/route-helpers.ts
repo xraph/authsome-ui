@@ -216,6 +216,21 @@ export async function getAuthPageProps(options: {
     };
   }
 
+  // Require authentication for CLI login (device flow authorization)
+  if (!session && route.type === 'cli-login') {
+    // Build the current URL to return to after login
+    const currentUrl = `/auth/cli-login${resolvedSearchParams?.code ? `?code=${resolvedSearchParams.code}` : ''}`;
+    const signInUrl = config.pages?.signIn || '/auth/signin';
+    const redirectUrl = `${signInUrl}?callbackUrl=${encodeURIComponent(currentUrl)}`;
+    
+    return {
+      route,
+      initialSession: null,
+      searchParams: resolvedSearchParams as Record<string, string | string[]>,
+      redirect: redirectUrl,
+    };
+  }
+
   return {
     route,
     initialSession: session,
@@ -249,6 +264,7 @@ export function createAuthMetadata() {
       'forgot-password': 'Forgot Password',
       'reset-password': 'Reset Password',
       'verify-email': 'Verify Email',
+      'cli-login': 'CLI Login',
     };
 
     return {

@@ -166,8 +166,8 @@ importers:
   packages/adapter-authsome:
     dependencies:
       '@authsome/client':
-        specifier: 0.0.6
-        version: 0.0.6
+        specifier: 0.0.9
+        version: 0.0.9
     devDependencies:
       '@authsome/ui-core':
         specifier: workspace:*
@@ -420,8 +420,8 @@ packages:
       lru-cache: 10.4.3
     dev: true
 
-  /@authsome/client@0.0.6:
-    resolution: {integrity: sha512-3yyzWT+u59fXN4eo7iXpZkGBqLhT+xsNxykq7gTCUwIONhJpaGfYP93lK6AVGy5Tih/k9NC/8LdYeAF1Nq3HAg==}
+  /@authsome/client@0.0.9:
+    resolution: {integrity: sha512-/U1Ce2n2f8gpbz5V6zNSfo0+TPNG3A5IcClTNkXHASzjAvOPTZOa531ZoekF45WoTf2mThSnLlJpgpJu2fGmOw==}
     dev: false
 
   /@babel/code-frame@7.27.1:

@@ -18,6 +18,12 @@ import { PasswordResetRequestRenderer, PasswordResetSentRenderer, PasswordResetC
 import { EmailVerificationRequiredRenderer, EmailVerificationSentRenderer } from './renderers/EmailVerificationRenderer';
 import { SuccessRenderer } from './renderers/SuccessRenderer';
 import { ErrorRenderer } from './renderers/ErrorRenderer';
+import { 
+  DeviceCodeEntryRenderer, 
+  DeviceAuthorizeRenderer, 
+  DeviceAuthorizedRenderer,
+  DeviceDeniedRenderer,
+} from './renderers/DeviceFlowRenderer';
 
 /**
  * Create built-in renderers for all flow steps
@@ -117,6 +123,23 @@ export function createBuiltInRenderers(uiComponents: UIComponents, rendererConfi
     ),
     [FlowStep.EMAIL_VERIFICATION_SENT]: (props: any) => (
       <EmailVerificationSentRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+
+    // Device Flow (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+    [FlowStep.DEVICE_CODE_ENTRY]: (props: any) => (
+      <DeviceCodeEntryRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.DEVICE_CODE_VERIFY]: (props: any) => (
+      <DeviceAuthorizeRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.DEVICE_AUTHORIZE]: (props: any) => (
+      <DeviceAuthorizeRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.DEVICE_AUTHORIZED]: (props: any) => (
+      <DeviceAuthorizedRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
+    ),
+    [FlowStep.DEVICE_DENIED]: (props: any) => (
+      <DeviceDeniedRenderer {...props} uiComponents={uiComponents} rendererConfig={rendererConfig} />
     ),
 
     // Success

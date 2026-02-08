@@ -9,7 +9,10 @@ export * from './MagicLinkRenderer';
 export * from './PhoneAuthRenderer';
 export * from './PasskeyRenderer';
 export * from './MFARenderer';
+export * from './PasswordResetRenderer';
+export * from './EmailVerificationRenderer';
 export * from './SuccessRenderer';
 export * from './ErrorRenderer';
 export * from './UnifiedAuthRenderer';
+export * from './DeviceFlowRenderer';
 

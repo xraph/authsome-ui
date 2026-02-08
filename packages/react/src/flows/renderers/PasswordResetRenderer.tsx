@@ -206,7 +206,7 @@ export function PasswordResetConfirmRenderer({
   const { Input, Button, Alert: AlertComponents, Field, icons } = uiComponents;
   
   const { Alert, AlertDescription } = AlertComponents || {};
-  const LockIcon = icons?.lock;
+  const LockIcon = icons?.key;
   const locale = rendererConfig?.locale || defaultLocale;
 
   const [password, setPassword] = useState('');

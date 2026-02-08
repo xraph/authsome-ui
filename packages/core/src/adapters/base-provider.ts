@@ -32,6 +32,13 @@ import type {
   ProviderConfig,
   RequestContext,
   CookieData,
+  DeviceFlowInitiateRequest,
+  DeviceFlowInitiateResponse,
+  DeviceCodeVerifyRequest,
+  DeviceCodeVerifyResponse,
+  DeviceAuthorizeRequest,
+  DeviceTokenPollRequest,
+  DeviceTokenPollResponse,
 } from '../types';
 import { toAuthError } from '../utils';
 
@@ -112,6 +119,31 @@ export abstract class BaseAuthProvider implements AuthProvider {
   abstract authenticatePasskey(request: PasskeyAuthRequest): Promise<AuthResponse>;
   abstract listPasskeys(): Promise<PasskeyCredential[]>;
   abstract deletePasskey(credentialId: string): Promise<void>;
+
+  // Device Flow methods (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+  /**
+   * Initiate device authorization flow
+   * Returns device code, user code, and verification URI
+   */
+  abstract initiateDeviceFlow(request: DeviceFlowInitiateRequest): Promise<DeviceFlowInitiateResponse>;
+  
+  /**
+   * Verify a user-entered device code
+   * Called by web UI when user enters the code shown on their device
+   */
+  abstract verifyDeviceCode(request: DeviceCodeVerifyRequest): Promise<DeviceCodeVerifyResponse>;
+  
+  /**
+   * Authorize or deny the device request
+   * Called when user approves or denies the authorization
+   */
+  abstract authorizeDevice(request: DeviceAuthorizeRequest): Promise<void>;
+  
+  /**
+   * Poll for device token (used by CLI/device)
+   * Returns auth response when authorized, or status when still pending
+   */
+  abstract pollDeviceToken(request: DeviceTokenPollRequest): Promise<AuthResponse | DeviceTokenPollResponse>;
 
   /**
    * Optional edge runtime context methods

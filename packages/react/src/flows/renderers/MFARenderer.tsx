@@ -138,6 +138,7 @@ export function MFAVerifyRenderer({
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [backupMode, setBackupMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,24 +154,38 @@ export function MFAVerifyRenderer({
     try {
       await verifyTwoFactor({
         code,
-        method: (state.metadata?.mfaMethod as TwoFactorMethod) || 'totp',
+        method: backupMode
+          ? 'backup_code' as TwoFactorMethod
+          : (state.metadata?.mfaMethod as TwoFactorMethod) || 'totp',
       });
       
       // Auth state is updated internally, just move to next step
       await onNext();
-    } catch (err: any) {
-      setError(err.message || locale.validation?.codeInvalid || 'Invalid verification code');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : locale.validation?.codeInvalid || 'Invalid verification code');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleToggleBackupMode = () => {
+    setBackupMode(!backupMode);
+    setCode('');
+    setError(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">{locale.mfa?.enterCode || 'Enter Verification Code'}</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          {backupMode
+            ? 'Enter Backup Code'
+            : (locale.mfa?.enterCode || 'Enter Verification Code')}
+        </h2>
         <p className="text-sm text-gray-600 mt-1">
-          Enter the 6-digit code from your authenticator app
+          {backupMode
+            ? 'Enter one of your backup recovery codes'
+            : 'Enter the 6-digit code from your authenticator app'}
         </p>
       </div>
 
@@ -182,17 +197,22 @@ export function MFAVerifyRenderer({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Field.Field>
-          <Field.FieldLabel htmlFor="code">{locale.mfa?.verify || 'Authentication Code'}</Field.FieldLabel>
+          <Field.FieldLabel htmlFor="code">
+            {backupMode ? 'Backup Code' : (locale.mfa?.verify || 'Authentication Code')}
+          </Field.FieldLabel>
         <Input
             id="code"
           type="text"
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          placeholder={locale.placeholders?.code || '000000'}
-          maxLength={6}
+          onChange={(e) => backupMode
+            ? setCode(e.target.value)
+            : setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+          }
+          placeholder={backupMode ? 'xxxx-xxxx-xxxx' : (locale.placeholders?.code || '000000')}
+          maxLength={backupMode ? 24 : 6}
           required
           disabled={loading || isLoading}
-          className="text-center text-2xl tracking-widest"
+          className={backupMode ? 'text-center tracking-wider' : 'text-center text-2xl tracking-widest'}
           autoFocus
             aria-invalid={!!error}
         />
@@ -220,8 +240,14 @@ export function MFAVerifyRenderer({
       </form>
 
       <p className="text-center text-sm text-gray-600">
-        Lost your device?{' '}
-        <button className="text-blue-600 hover:underline">Use backup code</button>
+        {backupMode ? 'Have your device?' : 'Lost your device?'}{' '}
+        <button
+          type="button"
+          className="text-blue-600 hover:underline"
+          onClick={handleToggleBackupMode}
+        >
+          {backupMode ? 'Use authenticator app' : 'Use backup code'}
+        </button>
       </p>
     </div>
   );

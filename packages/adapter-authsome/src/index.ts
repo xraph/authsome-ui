@@ -48,6 +48,13 @@ import type {
   Device,
   ListSessionsOptions,
   ListSessionsResponse,
+  DeviceFlowInitiateRequest,
+  DeviceFlowInitiateResponse,
+  DeviceCodeVerifyRequest,
+  DeviceCodeVerifyResponse,
+  DeviceAuthorizeRequest,
+  DeviceTokenPollRequest,
+  DeviceTokenPollResponse,
 } from '@authsome/ui-core';
 
 // Import AuthsomeClient and plugin types
@@ -69,6 +76,7 @@ import {
   AnonymousPlugin,
   SsoPlugin,
   OrganizationPlugin,
+  OidcproviderPlugin,
   // Error types
   AuthsomeError,
   UnauthorizedError,
@@ -175,12 +183,14 @@ export class AuthSomeAdapter implements AuthProvider {
   private anonymousPlugin: AnonymousPlugin | null = null;
   private ssoPlugin: SsoPlugin | null = null;
   private organizationPlugin: OrganizationPlugin | null = null;
+  private oidcproviderPlugin: OidcproviderPlugin | null = null;
 
   // Edge runtime context support  
   private _context: RequestContext | null = null;
   private _cookies: CookieData[] = [];
   private _rawSetCookieHeaders: string[] = [];
   private originalFetch: typeof fetch | null = null;
+  private fetchInterceptorInstalled = false;
 
   /**
    * Get the underlying AuthsomeClient instance
@@ -242,6 +252,7 @@ export class AuthSomeAdapter implements AuthProvider {
       'anonymous',
       'sso',
       'organization',
+      'oidcprovider',
     ];
     
     if (enabledPlugins.includes('social')) {
@@ -317,6 +328,11 @@ export class AuthSomeAdapter implements AuthProvider {
     if (enabledPlugins.includes('organization')) {
       this.organizationPlugin = new OrganizationPlugin();
       plugins.push(this.organizationPlugin);
+    }
+
+    if (enabledPlugins.includes('oidcprovider')) {
+      this.oidcproviderPlugin = new OidcproviderPlugin();
+      plugins.push(this.oidcproviderPlugin);
     }
     
     // Initialize AuthsomeClient
@@ -400,6 +416,8 @@ export class AuthSomeAdapter implements AuthProvider {
         return this.ssoPlugin;
       case 'organization':
         return this.organizationPlugin;
+      case 'oidcprovider':
+        return this.oidcproviderPlugin;
       default:
         return null;
     }
@@ -1141,22 +1159,68 @@ export class AuthSomeAdapter implements AuthProvider {
    */
   private installFetchInterceptor(): void {
     if (typeof globalThis.fetch === 'undefined') {
+      console.warn('[AuthSome Adapter] globalThis.fetch is undefined, cannot install interceptor');
       return; // No fetch to intercept
     }
     
-    // Save original fetch if not already saved
-    if (!this.originalFetch) {
-      this.originalFetch = globalThis.fetch;
+    // Check if we've already installed our interceptor to avoid double-wrapping
+    if (this.fetchInterceptorInstalled) {
+      console.log('[AuthSome Adapter] Fetch interceptor already installed for this adapter instance, skipping');
+      return;
     }
+    
+    // Check if another adapter instance already installed an interceptor
+    if ((globalThis.fetch as any).__authsomeInterceptor) {
+      console.log('[AuthSome Adapter] Another AuthSome interceptor already installed globally, skipping');
+      return;
+    }
+    
+    // Save original fetch - must be done before replacing globalThis.fetch
+    // Store the current globalThis.fetch before we replace it
+    this.originalFetch = globalThis.fetch;
+    console.log('[AuthSome Adapter] Saved original fetch');
     
     // Create interceptor that captures Set-Cookie headers
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
-    globalThis.fetch = async (...args: Parameters<typeof fetch>): Promise<Response> => {
+    const interceptor = async (...args: Parameters<typeof fetch>): Promise<Response> => {
       const url = args[0] instanceof Request ? args[0].url : String(args[0]);
       console.log('[Fetch Interceptor] Request to:', url);
       
-      const response = await self.originalFetch!(...args);
+      // Defensive check: ensure originalFetch is actually a function
+      // This protects against race conditions where clearContext is called during a fetch
+      if (typeof self.originalFetch !== 'function') {
+        console.error('[Fetch Interceptor] ERROR: originalFetch is not a function!');
+        console.error('[Fetch Interceptor] This indicates a context lifecycle issue.');
+        console.error('[Fetch Interceptor] Attempting to find a valid fetch implementation...');
+        
+        // Try to find native fetch by looking at the current globalThis.fetch
+        // and checking if it has our marker
+        let nativeFetch: typeof fetch | undefined;
+        
+        // Check if current globalThis.fetch is our interceptor
+        if ((globalThis.fetch as any).__authsomeInterceptor) {
+          // We're in trouble - we can't call ourselves
+          console.error('[Fetch Interceptor] globalThis.fetch is still our interceptor but originalFetch is gone!');
+          throw new Error(
+            'Fetch interceptor error: originalFetch is null but interceptor is still installed. ' +
+            'This is likely caused by calling clearContext() while fetch requests are pending. ' +
+            'Please ensure proper lifecycle management of the adapter context.'
+          );
+        } else {
+          // globalThis.fetch has been restored or replaced, use it
+          nativeFetch = globalThis.fetch;
+        }
+        
+        if (!nativeFetch) {
+          throw new Error('No fetch implementation available');
+        }
+        
+        const response = await nativeFetch(...args);
+        return response;
+      }
+      
+      const response = await self.originalFetch(...args);
       
       // Log all response headers
       console.log('[Fetch Interceptor] Response status:', response.status);
@@ -1180,16 +1244,25 @@ export class AuthSomeAdapter implements AuthProvider {
       return response;
     };
     
-    console.log('[AuthSome Adapter] Fetch interceptor installed');
+    // Mark the interceptor so we can identify it later
+    (interceptor as any).__authsomeInterceptor = true;
+    
+    globalThis.fetch = interceptor as typeof fetch;
+    this.fetchInterceptorInstalled = true;
+    
+    console.log('[AuthSome Adapter] Fetch interceptor installed successfully');
   }
 
   /**
    * Restore original fetch
    */
   private uninstallFetchInterceptor(): void {
-    if (this.originalFetch) {
+    if (this.originalFetch && this.fetchInterceptorInstalled) {
+      console.log('[AuthSome Adapter] Uninstalling fetch interceptor');
       globalThis.fetch = this.originalFetch;
       this.originalFetch = null;
+      this.fetchInterceptorInstalled = false;
+      console.log('[AuthSome Adapter] Fetch interceptor uninstalled');
     }
   }
 
@@ -1285,13 +1358,22 @@ export class AuthSomeAdapter implements AuthProvider {
     }
   }
 
-  async verifyEmail(_request: VerifyEmailRequest): Promise<void> {
+  async verifyEmail(request: VerifyEmailRequest): Promise<void> {
     this.ensurePlugin('emailverification');
-    
+    this.ensureInitialized();
+
     try {
-      // The verify endpoint may expect token in query/headers
-      // Check client implementation for exact signature
-      await this.emailVerificationPlugin!.verify();
+      // Plugin.verify() expects a different VerifyRequest shape (email/phone/remember).
+      // Use direct client request to pass token/code for link or OTP verification.
+      const body: { token?: string; code?: string } = {};
+      if (request.token) body.token = request.token;
+      if (request.code != null) body.code = request.code;
+      if (Object.keys(body).length === 0) {
+        throw new Error('VerifyEmailRequest must include token or code');
+      }
+      await this.client!.request('POST', '/email-verification/verify', {
+        body,
+      });
     } catch (error) {
       throw this.normalizeError(error);
     }
@@ -2266,6 +2348,145 @@ export class AuthSomeAdapter implements AuthProvider {
     return new AuthError(message, type, {
       originalError: error,
     });
+  }
+
+  // Device Flow methods (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+  /**
+   * Initiate device authorization flow
+   * Used by CLI/device applications to start the authorization process
+   * Returns device code, user code, and verification URI
+   */
+  async initiateDeviceFlow(request: DeviceFlowInitiateRequest): Promise<DeviceFlowInitiateResponse> {
+    this.ensurePlugin('oidcprovider');
+    
+    try {
+      const response = await this.oidcproviderPlugin!.deviceAuthorize({
+        client_id: request.clientId,
+        scope: request.scope || '',
+      });
+      
+      return {
+        deviceCode: response.device_code,
+        userCode: response.user_code,
+        verificationUri: response.verification_uri,
+        verificationUriComplete: response.verification_uri_complete,
+        expiresIn: response.expires_in,
+        interval: response.interval,
+      };
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
+  }
+
+  /**
+   * Verify a user-entered device code
+   * Called by web UI when user enters the code shown on their device
+   */
+  async verifyDeviceCode(request: DeviceCodeVerifyRequest): Promise<DeviceCodeVerifyResponse> {
+    this.ensurePlugin('oidcprovider');
+    
+    try {
+      const response = await this.oidcproviderPlugin!.deviceVerify({
+        user_code: request.userCode,
+      });
+      
+      // Map backend response to frontend interface
+      // Backend returns ScopeInfo[] with empty interface, but actual JSON has scope/description properties
+      const scopes = response.scopes?.map((s: any) => s.scope || '') || [];
+      
+      return {
+        valid: true,
+        clientName: response.clientName,
+        scopes: scopes.filter((scope: string) => scope !== ''),
+        // expiresIn not provided by backend, would need device code lookup
+      };
+    } catch (error) {
+      // Return invalid rather than throwing for invalid codes
+      const normalizedError = this.normalizeError(error);
+      if (normalizedError.type === AuthErrorType.VALIDATION_ERROR || 
+          normalizedError.type === AuthErrorType.INVALID_TOKEN ||
+          normalizedError.type === AuthErrorType.USER_NOT_FOUND) {
+        return {
+          valid: false,
+        };
+      }
+      throw normalizedError;
+    }
+  }
+
+  /**
+   * Authorize or deny the device request
+   * Called when user approves or denies the authorization
+   */
+  async authorizeDevice(request: DeviceAuthorizeRequest): Promise<void> {
+    this.ensurePlugin('oidcprovider');
+    
+    try {
+      await this.oidcproviderPlugin!.deviceAuthorizeDecision({
+        action: request.action,
+        user_code: request.userCode,
+      });
+    } catch (error) {
+      throw this.normalizeError(error);
+    }
+  }
+
+  /**
+   * Poll for device token (used by CLI/device)
+   * Returns auth response when authorized, or status when still pending
+   */
+  async pollDeviceToken(request: DeviceTokenPollRequest): Promise<AuthResponse | DeviceTokenPollResponse> {
+    this.ensurePlugin('oidcprovider');
+    
+    try {
+      // Use direct client request to bypass strict TokenRequest typing
+      // The device_code grant type only requires these fields per RFC 8628
+      const response = await this.client!.request<{
+        access_token?: string;
+        token_type?: string;
+        expires_in?: number;
+        refresh_token?: string;
+        scope?: string;
+        error?: string;
+      }>('POST', '/token', {
+        body: {
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: request.deviceCode,
+          client_id: request.clientId,
+        },
+      });
+      
+      // If there's an error in the response (OAuth 2.0 error format)
+      if (response.error) {
+        return { status: response.error as DeviceTokenPollResponse['status'] };
+      }
+      
+      // Successful token exchange - handle token management
+      const authMode = this.config!.authMode || 'bearer';
+      if (authMode === 'bearer' && response.access_token) {
+        this.client!.setToken(response.access_token);
+      }
+      
+      // Get session after token exchange
+      const sessionResponse = await this.client!.getSession();
+      return mapClientAuthResponseToCore(sessionResponse);
+    } catch (error: unknown) {
+      // Handle device flow specific errors
+      const errorWithCode = error as { error?: string; code?: string };
+      if (errorWithCode.error) {
+        // RFC 8628 error codes: authorization_pending, slow_down, expired_token, access_denied
+        return { status: errorWithCode.error as DeviceTokenPollResponse['status'] };
+      }
+      if (errorWithCode.code) {
+        // Alternative error format
+        const code = errorWithCode.code;
+        if (code === 'authorization_pending' || code === 'slow_down' || 
+            code === 'expired_token' || code === 'access_denied') {
+          return { status: code };
+        }
+      }
+      throw this.normalizeError(error);
+    }
   }
 }
 

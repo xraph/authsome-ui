@@ -310,11 +310,16 @@ export function UnifiedAuthRenderer({
 
     setLoading(true);
     try {
+      const isUsernameMode = !!authMethods.username;
+      const identity = isUsernameMode
+        ? { username: formData.username }
+        : { email: formData.email };
+
       if (mode === 'signin') {
-        await signIn({ email: formData.email, password: formData.password });
+        await signIn({ ...identity, password: formData.password });
       } else {
         await signUp({ 
-          email: formData.email, 
+          ...identity, 
           password: formData.password,
           ...formData, // Include custom fields
           ...dynamicValues, // Include dynamic field values
@@ -325,7 +330,7 @@ export function UnifiedAuthRenderer({
       // Include callbackUrl in metadata for redirect after flow completes
       setLoading(false);
       await onNext({ 
-        email: formData.email,
+        ...(isUsernameMode ? { username: formData.username } : { email: formData.email }),
         metadata: { ...state.metadata, callbackUrl },
       });
     } catch (err: any) {

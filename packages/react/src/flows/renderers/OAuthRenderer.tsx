@@ -245,8 +245,10 @@ export function OAuthRenderer({
       
       // Redirect to OAuth provider
       if (url) {
+        setLoading(false);
         window.location.href = url;
       } else {
+        setLoading(false);
         await onNext({ oauthProvider: provider });
       }
     } catch (err) {

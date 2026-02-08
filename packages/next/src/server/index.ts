@@ -41,9 +41,17 @@ export {
   verifyTwoFactorAction,
   requestPasswordResetAction,
   confirmPasswordResetAction,
+  sendVerificationEmailAction,
+  verifyEmailAction,
+  resendVerificationEmailAction,
   changePasswordAction,
   authenticatePasskeyAction,
   getOAuthProvidersAction,
+  // Device flow actions (RFC 8628)
+  initiateDeviceFlowAction,
+  verifyDeviceCodeAction,
+  authorizeDeviceAction,
+  pollDeviceTokenAction,
 } from './actions';
 
 // OAuth handling
@@ -101,3 +109,14 @@ export {
 // Types
 export type { SessionData, ActionResult } from '../types';
 
+// Device flow types (RFC 8628)
+export type {
+  DeviceFlowInitiateRequest,
+  DeviceFlowInitiateResponse,
+  DeviceCodeVerifyRequest,
+  DeviceCodeVerifyResponse,
+  DeviceAuthorizeRequest,
+  DeviceTokenPollRequest,
+  DeviceTokenPollResponse,
+  DeviceTokenPollStatus,
+} from '@authsome/ui-core';

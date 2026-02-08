@@ -206,3 +206,92 @@ export interface OrganizationMembership {
   permissions?: string[];
 }
 
+/**
+ * Device Flow types (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+ */
+
+/**
+ * Request to initiate device flow
+ * Used by CLI/device applications to start the authorization process
+ */
+export interface DeviceFlowInitiateRequest {
+  clientId: string;
+  scope?: string;
+}
+
+/**
+ * Response from device flow initiation
+ * Contains codes and URIs needed for user authorization
+ */
+export interface DeviceFlowInitiateResponse {
+  /** The device verification code (long, secret code for polling) */
+  deviceCode: string;
+  /** The user-facing code to enter in browser (short, easy-to-type) */
+  userCode: string;
+  /** The URL to visit for verification */
+  verificationUri: string;
+  /** Optional complete URL with user_code pre-filled */
+  verificationUriComplete?: string;
+  /** Lifetime of device_code and user_code in seconds */
+  expiresIn: number;
+  /** Minimum polling interval in seconds */
+  interval: number;
+}
+
+/**
+ * Request to verify a user-entered device code
+ * Used by the web UI when user enters their code
+ */
+export interface DeviceCodeVerifyRequest {
+  userCode: string;
+}
+
+/**
+ * Response from device code verification
+ * Contains information about the pending authorization
+ */
+export interface DeviceCodeVerifyResponse {
+  /** Whether the code is valid */
+  valid: boolean;
+  /** Client application name requesting access */
+  clientName?: string;
+  /** Scopes being requested */
+  scopes?: string[];
+  /** Time remaining before code expires */
+  expiresIn?: number;
+}
+
+/**
+ * Request to authorize/deny a device
+ * Used when user approves or denies the authorization request
+ */
+export interface DeviceAuthorizeRequest {
+  userCode: string;
+  action: 'approve' | 'deny';
+}
+
+/**
+ * Request to poll for device token
+ * Used by CLI/device to check if user has authorized
+ */
+export interface DeviceTokenPollRequest {
+  deviceCode: string;
+  clientId: string;
+}
+
+/**
+ * Status returned when polling is not yet complete
+ */
+export type DeviceTokenPollStatus = 
+  | 'authorization_pending'  // User hasn't authorized yet
+  | 'slow_down'              // Polling too frequently
+  | 'expired_token'          // Device code expired
+  | 'access_denied';         // User denied authorization
+
+/**
+ * Response from device token polling
+ * Either contains the auth response or a status indicator
+ */
+export interface DeviceTokenPollResponse {
+  status: DeviceTokenPollStatus;
+}

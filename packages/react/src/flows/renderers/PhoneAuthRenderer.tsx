@@ -41,14 +41,20 @@ export function PhoneAuthRenderer({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!sendPhoneCode) {
+      setError(locale.errors?.generic || 'Phone authentication is not available');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      await sendPhoneCode?.({ phone });
+      await sendPhoneCode({ phone });
       await onNext({ phone });
-    } catch (err: any) {
-      setError(err.message || locale.errors?.generic || 'Failed to send verification code');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : locale.errors?.generic || 'Failed to send verification code');
     } finally {
       setLoading(false);
     }
@@ -132,14 +138,20 @@ export function PhoneVerifyRenderer({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!verifyPhoneCode) {
+      setError(locale.errors?.generic || 'Phone verification is not available');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      await verifyPhoneCode?.({ phone: state.phone!, code });
+      await verifyPhoneCode({ phone: state.phone!, code });
       await onNext();
-    } catch (err: any) {
-      setError(err.message || locale.validation?.codeInvalid || 'Invalid verification code');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : locale.validation?.codeInvalid || 'Invalid verification code');
     } finally {
       setLoading(false);
     }

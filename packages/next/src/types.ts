@@ -19,7 +19,7 @@ import type { UIComponents, RendererConfig } from '@authsome/ui-react';
 /**
  * Authentication route types
  */
-export type AuthRoute = 'signin' | 'signup' | 'callback' | 'signout' | 'error' | 'verify' | 'forgot-password' | 'reset-password' | 'verify-email';
+export type AuthRoute = 'signin' | 'signup' | 'callback' | 'signout' | 'error' | 'verify' | 'forgot-password' | 'reset-password' | 'verify-email' | 'cli-login';
 
 /**
  * Parsed route information from catch-all segments
@@ -143,6 +143,12 @@ export interface PageConfig {
    * @default '/auth/verify-email'
    */
   verifyEmail?: string;
+
+  /**
+   * CLI/Device login page path (Device Flow RFC 8628)
+   * @default '/auth/cli-login'
+   */
+  cliLogin?: string;
 }
 
 /**

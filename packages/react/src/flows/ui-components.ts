@@ -184,6 +184,9 @@ export interface UIComponents {
     user?: ComponentType<{ className?: string }>;
     passkey?: ComponentType<{ className?: string }>;
     magicLink?: ComponentType<{ className?: string }>;
+    device?: ComponentType<{ className?: string }>;
+    check?: ComponentType<{ className?: string }>;
+    close?: ComponentType<{ className?: string }>;
   };
   
   // OAuth provider icons (optional)

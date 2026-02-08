@@ -81,6 +81,13 @@ export default function ExamplesPage() {
       path: '/examples/passkey',
       status: 'Demo',
     },
+    {
+      title: 'Device Flow (RFC 8628)',
+      description: 'CLI and input-constrained device authentication',
+      path: '/examples/device-flow',
+      status: 'New',
+      featured: true,
+    },
   ];
 
   return (

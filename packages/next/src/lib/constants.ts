@@ -12,6 +12,7 @@ export const DEFAULT_PAGES = {
   forgotPassword: '/auth/forgot-password',
   resetPassword: '/auth/reset-password',
   verifyEmail: '/auth/verify-email',
+  cliLogin: '/auth/cli-login',
 } as const;
 
 export const DEFAULT_SESSION_CONFIG = {

@@ -719,5 +719,31 @@ export interface AuthProvider {
    * Optional - only available if adapter supports session management
    */
   revokeAllSessions?(): Promise<void>;
+
+  // Device Flow methods (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+  /**
+   * Initiate device authorization flow
+   * Used by CLI/device applications to start the authorization process
+   * Returns device code, user code, and verification URI
+   */
+  initiateDeviceFlow?(request: import('./auth').DeviceFlowInitiateRequest): Promise<import('./auth').DeviceFlowInitiateResponse>;
+
+  /**
+   * Verify a user-entered device code
+   * Called by web UI when user enters the code shown on their device
+   */
+  verifyDeviceCode?(request: import('./auth').DeviceCodeVerifyRequest): Promise<import('./auth').DeviceCodeVerifyResponse>;
+
+  /**
+   * Authorize or deny the device request
+   * Called when user approves or denies the authorization
+   */
+  authorizeDevice?(request: import('./auth').DeviceAuthorizeRequest): Promise<void>;
+
+  /**
+   * Poll for device token (used by CLI/device)
+   * Returns auth response when authorized, or status when still pending
+   */
+  pollDeviceToken?(request: import('./auth').DeviceTokenPollRequest): Promise<AuthResponse | import('./auth').DeviceTokenPollResponse>;
 }
 

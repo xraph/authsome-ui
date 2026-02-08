@@ -32,6 +32,14 @@ import type {
   AuthError,
   ListSessionsOptions,
   ListSessionsResponse,
+  DeviceFlowInitiateRequest,
+  DeviceFlowInitiateResponse,
+  DeviceCodeVerifyRequest,
+  DeviceCodeVerifyResponse,
+  DeviceAuthorizeRequest,
+  DeviceTokenPollRequest,
+  DeviceTokenPollResponse,
+  AuthResponse,
 } from '@authsome/ui-core';
 import type { UIComponents } from '../flows/ui-components';
 import type { RendererConfig } from '../flows/renderer-config';
@@ -157,6 +165,12 @@ export interface AuthContextValue extends AuthStateContext {
   listSessions?: (options?: ListSessionsOptions) => Promise<ListSessionsResponse>;
   revokeSession?: (sessionId: string) => Promise<void>;
   revokeAllSessions?: () => Promise<void>;
+  
+  // Device flow (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+  initiateDeviceFlow?: (request: DeviceFlowInitiateRequest) => Promise<DeviceFlowInitiateResponse>;
+  verifyDeviceCode?: (request: DeviceCodeVerifyRequest) => Promise<DeviceCodeVerifyResponse>;
+  authorizeDevice?: (request: DeviceAuthorizeRequest) => Promise<void>;
+  pollDeviceToken?: (request: DeviceTokenPollRequest) => Promise<AuthResponse | DeviceTokenPollResponse>;
   
   // Direct adapter access
   getCurrentUser?: () => Promise<User | null>;
@@ -503,6 +517,12 @@ export function AuthProvider({
       listSessions: client.adapter?.listSessions?.bind(client.adapter),
       revokeSession: client.adapter?.revokeSession?.bind(client.adapter),
       revokeAllSessions: client.adapter?.revokeAllSessions?.bind(client.adapter),
+      
+      // Device flow (RFC 8628 - OAuth 2.0 Device Authorization Grant)
+      initiateDeviceFlow: client.adapter?.initiateDeviceFlow?.bind(client.adapter),
+      verifyDeviceCode: client.adapter?.verifyDeviceCode?.bind(client.adapter),
+      authorizeDevice: client.adapter?.authorizeDevice?.bind(client.adapter),
+      pollDeviceToken: client.adapter?.pollDeviceToken?.bind(client.adapter),
       
       // Direct adapter access
       getCurrentUser: client.adapter?.getCurrentUser?.bind(client.adapter),
