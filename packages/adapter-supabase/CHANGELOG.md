@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.12](https://github.com/xraph/authsome-ui/compare/adapter-supabase-v0.1.11...adapter-supabase-v0.1.12) (2026-02-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.9
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.9
+
 ## [0.1.11](https://github.com/xraph/authsome-ui/compare/adapter-supabase-v0.1.10...adapter-supabase-v0.1.11) (2025-12-29)
 
 

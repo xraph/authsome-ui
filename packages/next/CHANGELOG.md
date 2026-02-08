@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.16](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.15...ui-next-v0.1.16) (2026-02-08)
+
+
+### Features
+
+* implement device flow for OAuth 2.0 authorization ([bd6f98b](https://github.com/xraph/authsome-ui/commit/bd6f98bbcd9a832a0c6c7a7ba60888789534aa7e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.9
+    * @authsome/ui-react bumped to 0.1.15
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.9
+    * @authsome/ui-react bumped to 0.1.15
+
 ## [0.1.15](https://github.com/xraph/authsome-ui/compare/ui-next-v0.1.14...ui-next-v0.1.15) (2025-12-29)
 
 
