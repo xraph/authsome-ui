@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.13](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.12...adapter-authsome-v0.1.13) (2026-02-08)
+
+
+### Features
+
+* implement device flow for OAuth 2.0 authorization ([bd6f98b](https://github.com/xraph/authsome-ui/commit/bd6f98bbcd9a832a0c6c7a7ba60888789534aa7e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authsome/ui-core bumped to 0.1.9
+  * peerDependencies
+    * @authsome/ui-core bumped to 0.1.9
+
 ## [0.1.12](https://github.com/xraph/authsome-ui/compare/adapter-authsome-v0.1.11...adapter-authsome-v0.1.12) (2025-12-29)
 
 

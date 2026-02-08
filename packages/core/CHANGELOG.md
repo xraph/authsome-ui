@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.8...ui-core-v0.1.9) (2026-02-08)
+
+
+### Features
+
+* implement device flow for OAuth 2.0 authorization ([bd6f98b](https://github.com/xraph/authsome-ui/commit/bd6f98bbcd9a832a0c6c7a7ba60888789534aa7e))
+
 ## [0.1.8](https://github.com/xraph/authsome-ui/compare/ui-core-v0.1.7...ui-core-v0.1.8) (2025-12-29)
 
 
